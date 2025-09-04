@@ -92,6 +92,12 @@ class Game:
             self.audio.build()
             scene_map = load_json('data/scene_music.json', {})
             self.audio.load_scene_map(scene_map)
+            # volumes from settings (defaults 0.5 if not present)
+            vol_music = float(self.settings.get('music_volume', 0.5))
+            vol_sfx   = float(self.settings.get('sfx_volume', 0.5))
+            self.audio.set_music_volume(vol_music)
+            self.audio.sfx_vol = vol_sfx  # used by play_sfx; channels pick this up each play
+
 
         self.services = {
             'audio': self.audio,
