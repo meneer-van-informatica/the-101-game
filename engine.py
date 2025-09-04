@@ -63,29 +63,59 @@ def make_scene(key, classes, services):
     cls = classes.get(key) or classes['scene_picker']
     return key, cls(services)
 
+def resolve_default_start(scene_classes: dict) -> str:
+    # 1) worlds.json[0] als die bestaat én in classes zit
+    try:
+        worlds = load_json(os.path.join('data', 'worlds.json'), [])
+    except Exception:
+        worlds = []
+    if worlds:
+        first = worlds[0]
+        if isinstance(first, str) and first in scene_classes:
+            return first
+
+    # 2) vaste voorkeursvolgorde (pas aan als jouw project anders is)
+    for candidate in ['level_story_one', 'typing_ad', 'world_w3_machines']:
+        if candidate in scene_classes:
+            return candidate
+
+    # 3) eerste beste scene behalve menu/dev
+    for k in scene_classes.keys():
+        if k not in ('scene_picker', 'dev_settings'):
+            return k
+
+    # ultieme fallback
+    return 'scene_picker'
+
 
 def resolve_cli_scene(cli: str, scene_classes: dict) -> str | None:
     if not cli:
         return None
     cli = cli.strip().lower()
 
-    # alias: wN → lookup in data/worlds.json
+    # 'w0' / 'default' / 'enter' → doe wat menu-Enter zou doen
+    if cli in ('w0', 'default', 'enter'):
+        return resolve_default_start(scene_classes)
+
+    # alias: wN → worlds.json[N]
     if len(cli) >= 2 and cli[0] == 'w' and cli[1:].isdigit():
         try:
             worlds = load_json(os.path.join('data', 'worlds.json'), [])
             idx = int(cli[1:])
             if 0 <= idx < len(worlds):
-                return worlds[idx]
+                key = worlds[idx]
+                return key if key in scene_classes else None
         except Exception:
             return None
 
-    # puur numeriek index
+    # numeriek index → worlds.json[N]
     if cli.isdigit():
         try:
             worlds = load_json(os.path.join('data', 'worlds.json'), [])
             idx = int(cli)
             if 0 <= idx < len(worlds):
-                return worlds[idx]
+                key = worlds[idx]
+                return key if key in scene_classes else None
         except Exception:
             return None
 
@@ -361,6 +391,19 @@ def launch_world(tag: str):
     game = Game(args)
     return game.run()
 
+def run_menu():
+    args = parse_args()
+    args.start = 'menu'
+    args.scene = ''
+    game = Game(args)
+    return game.run()
+
+def launch_world(tag: str):
+    args = parse_args()
+    args.start = tag
+    args.scene = tag
+    game = Game(args)
+    return game.run()
 
 # ---------- main ----------
 def main():
