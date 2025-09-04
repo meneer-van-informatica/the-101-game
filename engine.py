@@ -48,9 +48,24 @@ def make_scene(key, classes, services):
     cls = classes.get(key) or classes['scene_picker']
     return key, cls(services)
 
+def resolve_scene_key(requested: str, default_key: str = 'scene_picker'):
+    if not requested:
+        return default_key
+    # index? probeer data/worlds.json in te lezen
+    try:
+        with open(os.path.join('data', 'worlds.json'), 'r', encoding='utf-8') as f:
+            worlds = json.load(f) or []
+    except Exception:
+        worlds = []
+    if requested.isdigit():
+        i = int(requested)
+        if 0 <= i < len(worlds):
+            return worlds[i]
+        return default_key
+    # anders neem de string als key
+    return requested
 
 # ---------- game ----------
-
 class Game:
     def __init__(self, args):
         ensure_data_dirs()
@@ -110,6 +125,9 @@ class Game:
         # scenes
         self.scene_classes = import_scenes()
         self.scene_key, self.scene = make_scene('scene_picker', self.scene_classes, self.services)
+        start_key = resolve_scene_key(getattr(args, 'scene', ''), 'scene_picker')       
+        self.scene_key, self.scene = make_scene(start_key, self.scene_classes, self.services)
+
 
         # timing
         self.clock = pygame.time.Clock()
@@ -150,6 +168,13 @@ class Game:
                 if e.type == pygame.QUIT:
                     self.quit(); continue
                 if e.type == pygame.KEYDOWN:
+                    if e.key == pygame.K_F12:
+                        os.makedirs(getattr(args, 'shotdir', 'screenshots'), exist_ok=True)
+                        ts = pygame.time.get_ticks()
+                        path = os.path.join(getattr(args, 'shotdir', 'screenshots'), f'{self.scene_key}_{ts}.png')
+                        pygame.image.save(self.screen, path)
+                        print('[SHOT]', path)
+                        continue
                     if e.key == pygame.K_q:
                         self.quit(); continue
                     if e.key == pygame.K_F11 or (e.key == pygame.K_RETURN and (e.mod & pygame.KMOD_ALT)):
@@ -241,8 +266,9 @@ def parse_args():
     p = argparse.ArgumentParser(description='The 101 Game')
     p.add_argument('--silent', action='store_true', help='skip audio init but still render/update')
     p.add_argument('--windowed', action='store_true', help='force windowed mode (override settings)')
+    p.add_argument('--scene', type=str, default='', help='start scene by key (e.g. level_story_one) or index (e.g. 0..9)')
+    p.add_argument('--shotdir', type=str, default='screenshots', help='folder for F12 screenshots')
     return p.parse_args()
-
 
 def main():
     Game(parse_args()).run()
