@@ -1,456 +1,356 @@
-# engine.py
-import os
-import sys
-import json
-import argparse
-import importlib
+﻿# engine.py — frames + shots + autodiscovery
+import os, sys, json, argparse, importlib, pkgutil, inspect
 import pygame
 
 from core import audio as audio_mod
 from core.tts import Voice
 from core.progress import Progress
 
-# ---------- compatibele subcommand interpretatie ----------
-def _compat_positional(argv: list[str]) -> tuple[str, bool]:
-    """
-    Geeft (start_tag, snapshot_flag) op basis van positionele tokens:
-      km|menu  -> ('menu', False)
-      w0|w1... -> ('w0', False)
-      shot X   -> (X or 'w0', True)
-    Als niets matched: ('', False)
-    """
-    toks = [t for t in argv[1:] if not t.startswith('-')]
-    if not toks:
-        return '', False
-    t0 = toks[0].lower().strip()
-    if t0 in ('km', 'menu', 'level0', 'l0'):
-        return 'menu', False
-    if t0 == 'shot':
-        return (toks[1].lower().strip() if len(toks) > 1 else 'w0'), True
-    # bv. 'w0', 'typing_ad', 'world_w3_machines'
-    return t0, False
-
-def _start_env() -> str:
-    return os.getenv('KM_START', '').strip()
-
-# ---------- util ----------
 def load_json(path, default):
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return default
 
 def ensure_data_dirs():
-    os.makedirs('data', exist_ok=True)
-    os.makedirs(os.path.join('data', 'music'), exist_ok=True)
-    os.makedirs(os.path.join('data', 'sfx'), exist_ok=True)
-    os.makedirs('screenshots', exist_ok=True)
+    os.makedirs("data", exist_ok=True)
+    os.makedirs(os.path.join("data","music"), exist_ok=True)
+    os.makedirs(os.path.join("data","sfx"), exist_ok=True)
+    os.makedirs("screenshots", exist_ok=True)
 
-# ---------- scenes registry ----------
+# ---------- registry ----------
 def import_scenes():
-    # pas aan aan jouw project
+    # vaste scenes (pas aan als jouw project anders is)
     from scenes.scene_picker import ScenePicker
     from scenes.dev_settings import DevSettings
     from scenes.level_story_one import LevelStoryOne
     from scenes.typing_ad import TypingAD
     from scenes.level7_spectro_mix import Level7SpectroMix
     from scenes.world_w3_machines import WorldW3Machines
-    return {
-        'scene_picker': ScenePicker,
-        'dev_settings': DevSettings,
-        'level_story_one': LevelStoryOne,
-        'typing_ad': TypingAD,
-        'level7_spectro_mix': Level7SpectroMix,
-        'world_w3_machines': WorldW3Machines,
+    from scenes.w0_f0_square import W0F0Square
+
+    registry = {
+        "scene_picker":      ScenePicker,
+        "dev_settings":      DevSettings,
+        "level_story_one":   LevelStoryOne,
+        "typing_ad":         TypingAD,
+        "level7_spectro_mix":Level7SpectroMix,
+        "world_w3_machines": WorldW3Machines,
+        'w0_f0_square': W0F0Square,
+        'f0': W0F0Square,
+
     }
 
-def make_scene(key, classes, services):
-    cls = classes.get(key) or classes['scene_picker']
-    return key, cls(services)
-
-# ---------- scene key resolvers ----------
-def resolve_default_start(scene_classes: dict) -> str:
+    # --- auto-discover frames: scenes/frame_*.py   key = module name, alias fN ---
     try:
-        worlds = load_json(os.path.join('data', 'worlds.json'), [])
+        scenes_path = os.path.join(os.path.dirname(__file__), "scenes")
+        for m in pkgutil.iter_modules([scenes_path]):
+            name = m.name
+            if not name.startswith("frame_"): 
+                continue
+            mod = importlib.import_module(f"scenes.{name}")
+            # kies eerste klasse die in dit module gedefinieerd is
+            cls = None
+            for nm, obj in inspect.getmembers(mod, inspect.isclass):
+                if obj.__module__ == mod.__name__:
+                    cls = obj; break
+            if cls:
+                registry[name] = cls
+                suffix = name.replace("frame_","")
+                if suffix.isdigit():
+                    registry[f"f{suffix}"] = cls
+    except Exception as ex:
+        print("[autodiscover frames error]", ex)
+
+    # convenience: bekende demo-frame er sowieso in (als module bestaat)
+    try:
+        from scenes.frame_square import FrameSquare
+        registry.setdefault("frame_square", FrameSquare)
+        registry.setdefault("f1", FrameSquare)
     except Exception:
-        worlds = []
+        pass
+
+    return registry
+
+def resolve_default_start(scene_classes: dict) -> str:
+    worlds = load_json(os.path.join("data","worlds.json"), [])
     if worlds:
         first = worlds[0]
         if isinstance(first, str) and first in scene_classes:
             return first
-    for candidate in ['level_story_one', 'typing_ad', 'world_w3_machines']:
+    for candidate in ["level_story_one","typing_ad","world_w3_machines"]:
         if candidate in scene_classes:
             return candidate
     for k in scene_classes.keys():
-        if k not in ('scene_picker', 'dev_settings'):
+        if k not in ("scene_picker","dev_settings"):
             return k
-    return 'scene_picker'
+    return "scene_picker"
 
 def resolve_cli_scene(cli: str, scene_classes: dict) -> str | None:
-    if not cli:
-        return None
+    if not cli: return None
     cli = cli.strip().lower()
-    if cli in ('w0', 'default', 'enter'):
+    if cli in ("w0","default","enter"):
         return resolve_default_start(scene_classes)
-    if len(cli) >= 2 and cli[0] == 'w' and cli[1:].isdigit():
-        try:
-            worlds = load_json(os.path.join('data', 'worlds.json'), [])
-            idx = int(cli[1:])
-            if 0 <= idx < len(worlds):
-                key = worlds[idx]
-                return key if key in scene_classes else None
-        except Exception:
-            return None
+    if len(cli) >= 2 and cli[0] == "w" and cli[1:].isdigit():
+        worlds = load_json(os.path.join("data","worlds.json"), [])
+        idx = int(cli[1:])
+        if 0 <= idx < len(worlds):
+            key = worlds[idx]
+            return key if key in scene_classes else None
+        return None
     if cli.isdigit():
-        try:
-            worlds = load_json(os.path.join('data', 'worlds.json'), [])
-            idx = int(cli)
-            if 0 <= idx < len(worlds):
-                key = worlds[idx]
-                return key if key in scene_classes else None
-        except Exception:
-            return None
-    if cli in scene_classes:
-        return cli
+        worlds = load_json(os.path.join("data","worlds.json"), [])
+        idx = int(cli)
+        if 0 <= idx < len(worlds):
+            key = worlds[idx]
+            return key if key in scene_classes else None
+        return None
+    if cli in scene_classes: return cli
     return None
 
 # ---------- snapshot helpers ----------
 def _final_frame_shot(game, max_seconds=180.0):
-    sim_dt = 1.0 / 60.0
-    elapsed = 0.0
-    next_key = getattr(game.scene, 'next_scene', None)
-    done = getattr(game.scene, 'done', False)
+    sim_dt, elapsed = 1.0/60.0, 0.0
+    next_key = getattr(game.scene, "next_scene", None)
+    done = getattr(game.scene, "done", False)
     while elapsed < max_seconds and not (next_key or done):
         try:
-            if hasattr(game.scene, 'update'):
+            if hasattr(game.scene, "update"):
                 game.scene.update(sim_dt)
         except Exception as ex:
-            print('[scene update error during shot]', ex)
+            print("[scene update error during shot]", ex)
             break
-        if game.audio and getattr(game.scene, 'wants_beat', False):
-            try:
-                game.audio.music_tick(int(sim_dt * 1000))
-            except Exception:
-                pass
-        next_key = getattr(game.scene, 'next_scene', None)
-        done = getattr(game.scene, 'done', False)
-        if callable(getattr(game.scene, 'next', None)):
+        if game.audio and getattr(game.scene, "wants_beat", False):
+            try: game.audio.music_tick(int(sim_dt*1000))
+            except Exception: pass
+        next_key = getattr(game.scene, "next_scene", None)
+        done = getattr(game.scene, "done", False)
+        if callable(getattr(game.scene, "next", None)):
             try:
                 nk = game.scene.next()
-                if nk:
-                    next_key = nk
-            except Exception:
-                pass
+                if nk: next_key = nk
+            except Exception: pass
         elapsed += sim_dt
     try:
-        if hasattr(game.scene, 'on_snapshot'):
-            game.scene.on_snapshot(game.screen, when='final')
-        elif hasattr(game.scene, 'draw'):
+        if hasattr(game.scene, "on_snapshot"):
+            game.scene.on_snapshot(game.screen, when="final")
+        elif hasattr(game.scene, "draw"):
             game.scene.draw(game.screen)
         else:
-            game.draw_fallback('scene has no draw()')
+            game.draw_fallback("scene has no draw()")
     except Exception as ex:
         game.draw_fallback(ex)
     pygame.display.flip()
 
 def _save_shot(game, label=None):
-    shotdir = getattr(game.args, 'shotdir', 'screenshots') or 'screenshots'
+    shotdir = getattr(game.args, "shotdir", "screenshots") or "screenshots"
     os.makedirs(shotdir, exist_ok=True)
     import time
     tag = label or game.scene_key
-    path = os.path.join(shotdir, f'{tag}_{int(time.time())}.png')
+    path = os.path.join(shotdir, f"{tag}_{int(time.time())}.png")
     pygame.image.save(game.screen, path)
-    print('[SHOT]', path)
+    print("[SHOT]", path)
     return path
 
-# ---------- Game ----------
+# ---------- game ----------
 class Game:
     def __init__(self, args: argparse.Namespace):
         self.args = args
         ensure_data_dirs()
 
         defaults = {
-            'fullscreen': True,
-            'music_bpm': 90,
-            'target_fps': 60,
-            'font_name': 'consolas',
-            'music_volume': 0.5,
-            'sfx_volume': 0.5,
+            "fullscreen": True, "music_bpm": 90, "target_fps": 60,
+            "font_name": "consolas", "music_volume": 0.5, "sfx_volume": 0.5,
         }
-        self.settings = load_json('data/settings.json', defaults)
-        if getattr(args, 'windowed', False):
-            self.settings['fullscreen'] = False
+        self.settings = load_json("data/settings.json", defaults)
+        if getattr(args, "windowed", False): self.settings["fullscreen"] = False
 
         self.silent = bool(args.silent)
-        if not self.silent:
-            audio_mod.pre_init()
+        if not self.silent: audio_mod.pre_init()
         pygame.init()
 
-        self.screen = None
-        self.size = (1280, 720)
         self.apply_display_mode()
-        pygame.display.set_caption('The 101 Game • PyGame × Audio')
+        pygame.display.set_caption("The 101 Game  PyGame × Audio")
 
         self.progress = Progress()
-        self.voice = Voice(silent=self.silent)
+        self.voice    = Voice(silent=self.silent)
+
         self.audio = None
         if not self.silent:
-            try:
-                audio_mod.init()
-            except Exception:
-                pass
-            self.audio = audio_mod.Audio(bpm=int(self.settings.get('music_bpm', 90)))
+            try: audio_mod.init()
+            except Exception: pass
+            self.audio = audio_mod.Audio(bpm=int(self.settings.get("music_bpm", 90)))
             self.audio.build()
-            scene_map = load_json('data/scene_music.json', {})
-            self.audio.load_scene_map(scene_map)
-            self.audio.set_music_volume(float(self.settings.get('music_volume', 0.5)))
-            self.audio.sfx_vol = float(self.settings.get('sfx_volume', 0.5))
+            self.audio.load_scene_map(load_json("data/scene_music.json", {}))
+            self.audio.set_music_volume(float(self.settings.get("music_volume", 0.5)))
+            self.audio.sfx_vol = float(self.settings.get("sfx_volume", 0.5))
 
         self.services = {
-            'audio': self.audio,
-            'tts': self.voice,
-            'settings': self.settings,
-            'progress': self.progress,
-            'silent': self.silent,
+            "audio": self.audio, "tts": self.voice, "settings": self.settings,
+            "progress": self.progress, "silent": self.silent,
         }
 
         self.scene_classes = import_scenes()
 
-        requested = (getattr(args, 'scene', '') or '').strip().lower()
-        start_key = resolve_cli_scene(requested, self.scene_classes) or 'scene_picker'
-        self.scene_key, self.scene = make_scene(start_key, self.scene_classes, self.services)
+        requested = (getattr(args, "scene", "") or "").strip().lower()
+        start_key = resolve_cli_scene(requested, self.scene_classes) or "scene_picker"
+        self.scene_key, self.scene = self.make_scene(start_key)
 
         self.clock = pygame.time.Clock()
-        self.target_fps = int(self.settings.get('target_fps', 60))
+        self.target_fps = int(self.settings.get("target_fps", 60))
         self.running = True
 
         if self.audio:
-            try:
-                self.audio.play_for(self.scene_key)
-            except Exception:
-                pass
+            try: self.audio.play_for(self.scene_key)
+            except Exception: pass
+
+    def make_scene(self, key):
+        cls = self.scene_classes.get(key) or self.scene_classes["scene_picker"]
+        return key, cls(self.services)
 
     def apply_display_mode(self):
-        if bool(self.settings.get('fullscreen')):
+        if bool(self.settings.get("fullscreen")):
             info = pygame.display.Info()
-            w, h = info.current_w, info.current_h
-            self.screen = pygame.display.set_mode((w, h), pygame.FULLSCREEN)
+            self.screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.FULLSCREEN)
         else:
             self.screen = pygame.display.set_mode((1280, 720), pygame.SCALED | pygame.RESIZABLE)
 
     def toggle_fullscreen(self):
-        self.settings['fullscreen'] = not bool(self.settings.get('fullscreen'))
+        self.settings["fullscreen"] = not bool(self.settings.get("fullscreen"))
         self.apply_display_mode()
 
     def run(self):
         while self.running:
-            dt_ms = self.clock.tick(self.target_fps)
-            dt = dt_ms / 1000.0
+            dt_ms = self.clock.tick(self.target_fps); dt = dt_ms/1000.0
 
-            # --- SNAPSHOT BLOCK BEGIN ---
-            if getattr(self.args, 'snapshot', False):
-                if getattr(self.args, 'start', ''):
-                    _final_frame_shot(self, max_seconds=180.0)
-                    _save_shot(self, label=self.args.start)
-                    self.quit()
-                    continue
+            # --- snapshot path ---
+            if getattr(self.args, "snapshot", False):
+                if getattr(self.args, "start", ""):
+                    _final_frame_shot(self, max_seconds=180.0); _save_shot(self, label=self.args.start)
+                    self.quit(); continue
+                # single-frame for --scene
                 drew = False
-                if hasattr(self.scene, 'on_snapshot'):
-                    try:
-                        self.scene.on_snapshot(self.screen, when='final')
-                        drew = True
-                    except Exception as ex:
-                        print('[snapshot hook error]', ex)
+                if hasattr(self.scene, "on_snapshot"):
+                    try: self.scene.on_snapshot(self.screen, when="final"); drew=True
+                    except Exception as ex: print("[snapshot hook error]", ex)
                 if not drew:
                     try:
-                        for _ in range(180):
-                            if hasattr(self.scene, 'update'):
-                                self.scene.update(1.0/60.0)
-                    except Exception:
-                        pass
+                        for _ in range(60):
+                            if hasattr(self.scene, "update"): self.scene.update(1/60)
+                    except Exception: pass
                     try:
-                        if hasattr(self.scene, 'draw'):
-                            self.scene.draw(self.screen)
-                        else:
-                            self.draw_fallback('scene has no draw()')
-                    except Exception as ex:
-                        self.draw_fallback(ex)
-                pygame.display.flip()
-                _save_shot(self)
-                self.quit()
-                continue
-            # --- SNAPSHOT BLOCK END ---
+                        if hasattr(self.scene, "draw"): self.scene.draw(self.screen)
+                        else: self.draw_fallback("scene has no draw()")
+                    except Exception as ex: self.draw_fallback(ex)
+                pygame.display.flip(); _save_shot(self); self.quit(); continue
 
             for e in pygame.event.get():
-                if e.type == pygame.QUIT:
-                    self.quit()
-                    continue
+                if e.type == pygame.QUIT: self.quit(); continue
                 if e.type == pygame.KEYDOWN:
-                    if e.key == pygame.K_ESCAPE:
-                        self.switch_scene('dev_settings')
-                        continue
+                    if e.key == pygame.K_ESCAPE: self.switch_scene("dev_settings"); continue
                     if e.key == pygame.K_F12:
-                        shotdir = getattr(self.args, 'shotdir', 'screenshots') or 'screenshots'
+                        shotdir = getattr(self.args, "shotdir", "screenshots") or "screenshots"
                         os.makedirs(shotdir, exist_ok=True)
-                        ts = pygame.time.get_ticks()
-                        path = os.path.join(shotdir, f'{self.scene_key}_{ts}.png')
-                        pygame.image.save(self.screen, path)
-                        print('[SHOT]', path)
-                        continue
-                    if e.key == pygame.K_q:
-                        self.quit()
-                        continue
+                        path = os.path.join(shotdir, f"{self.scene_key}_{pygame.time.get_ticks()}.png")
+                        pygame.image.save(self.screen, path); print("[SHOT]", path); continue
+                    if e.key == pygame.K_q: self.quit(); continue
                     if e.key == pygame.K_F11 or (e.key == pygame.K_RETURN and (e.mod & pygame.KMOD_ALT)):
-                        self.toggle_fullscreen()
-                        continue
+                        self.toggle_fullscreen(); continue
                     if e.key == pygame.K_F9 and self.audio:
-                        self.audio.load_scene_map(load_json('data/scene_music.json', {}))
-                        continue
+                        self.audio.load_scene_map(load_json("data/scene_music.json", {})); continue
                 try:
-                    if hasattr(self.scene, 'handle_event'):
-                        self.scene.handle_event(e)
-                except Exception as ex:
-                    print('[scene handle_event error]', ex)
+                    if hasattr(self.scene, "handle_event"): self.scene.handle_event(e)
+                except Exception as ex: print("[scene handle_event error]", ex)
 
             try:
-                if hasattr(self.scene, 'update'):
-                    self.scene.update(dt)
-            except Exception as ex:
-                print('[scene update error]', ex)
+                if hasattr(self.scene, "update"): self.scene.update(dt)
+            except Exception as ex: print("[scene update error]", ex)
 
-            if self.audio and getattr(self.scene, 'wants_beat', False):
-                try:
-                    self.audio.music_tick(dt_ms)
-                except Exception:
-                    pass
+            if self.audio and getattr(self.scene, "wants_beat", False):
+                try: self.audio.music_tick(dt_ms)
+                except Exception: pass
 
-            next_key = getattr(self.scene, 'next_scene', None)
-            done = getattr(self.scene, 'done', False)
-            if callable(getattr(self.scene, 'next', None)):
+            next_key = getattr(self.scene, "next_scene", None)
+            done = getattr(self.scene, "done", False)
+            if callable(getattr(self.scene, "next", None)):
                 try:
                     nk = self.scene.next()
-                    if nk:
-                        next_key = nk
-                except Exception:
-                    pass
+                    if nk: next_key = nk
+                except Exception: pass
 
-            if next_key == 'QUIT':
-                self.quit()
-            elif next_key or done:
-                self.switch_scene(next_key or 'scene_picker')
+            if next_key == "QUIT": self.quit()
+            elif next_key or done: self.switch_scene(next_key or "scene_picker")
 
             try:
-                if hasattr(self.scene, 'draw'):
-                    self.scene.draw(self.screen)
-                else:
-                    self.draw_fallback('scene has no draw()')
-            except Exception as ex:
-                self.draw_fallback(ex)
+                if hasattr(self.scene, "draw"): self.scene.draw(self.screen)
+                else: self.draw_fallback("scene has no draw()")
+            except Exception as ex: self.draw_fallback(ex)
 
             pygame.display.flip()
 
-        self.progress.save()
-        pygame.quit()
+        self.progress.save(); pygame.quit()
 
     def switch_scene(self, new_key):
-        if new_key not in self.scene_classes:
-            new_key = 'scene_picker'
-        self.scene_key, self.scene = make_scene(new_key, self.scene_classes, self.services)
-        self.progress.data['last_scene'] = new_key
-        self.progress.save()
+        if new_key not in self.scene_classes: new_key = "scene_picker"
+        self.scene_key, self.scene = self.make_scene(new_key)
+        self.progress.data["last_scene"] = new_key; self.progress.save()
         if self.audio:
-            try:
-                self.audio.play_for(new_key)
-            except Exception:
-                pass
+            try: self.audio.play_for(new_key)
+            except Exception: pass
 
-    def quit(self):
-        self.running = False
+    def quit(self): self.running = False
 
     def draw_fallback(self, ex):
-        self.screen.fill((0, 0, 0))
-        fontname = self.settings.get('font_name') or pygame.font.get_default_font()
-        font = pygame.font.SysFont(fontname, 22)
+        self.screen.fill((0,0,0))
+        font = pygame.font.SysFont(self.settings.get("font_name") or pygame.font.get_default_font(), 22)
         y = 120
-        for line in [
-            f'Error while drawing scene {self.scene_key}',
-            f'{ex}',
-            'Press Q to quit',
-        ]:
-            surf = font.render(line, True, (255, 100, 100))
-            self.screen.blit(surf, (60, y))
-            y += 32
+        for line in [f"Error while drawing scene {self.scene_key}", f"{ex}", "Press Q to quit"]:
+            self.screen.blit(font.render(line, True, (255,100,100)), (60,y)); y += 32
 
-# ---------- argparse + surface API ----------
+# ---------- argparse ----------
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description='The 101 Game')
-    p.add_argument('--start', type=str, default='', help='menu|w0|w1|<scene-key>')
-    p.add_argument('--scene', type=str, default='', help='scene-key of alias (w0, 0, typing_ad)')
-    p.add_argument('--silent', action='store_true', help='skip audio init, maar wel renderen')
-    p.add_argument('--windowed', action='store_true', help='forceer windowed mode (override settings)')
-    p.add_argument('--shotdir', type=str, default='screenshots', help='map voor F12/snapshot PNGs')
-    p.add_argument('--snapshot', action='store_true', help='render laatste frame en exit (met --start)')
-    # Belangrijk: negeer onbekende positionele tokens zoals 'km', 'shot', 'w0'
-    args, _unknown = p.parse_known_args()
+    p = argparse.ArgumentParser(description="The 101 Game")
+    p.add_argument("--start", type=str, default="", help="menu|w0|w1|<scene-key>")
+    p.add_argument("--scene", type=str, default="", help="scene-key (bv. frame_square, f1, typing_ad)")
+    p.add_argument("--silent", action="store_true", help="skip audio init")
+    p.add_argument("--windowed", action="store_true", help="force windowed")
+    p.add_argument("--shotdir", type=str, default="screenshots", help="PNG output folder")
+    p.add_argument("--snapshot", action="store_true", help="render laatste frame en exit")
+    args, _ = p.parse_known_args()  # negeer onbekende tokens
     return args
 
-
-def run_menu():
-    args = parse_args()
-    args.start = 'menu'
-    args.scene = ''
-    game = Game(args)
-    return game.run()
-
-def launch_world(tag: str):
-    args = parse_args()
-    args.start = tag
-    args.scene = tag
-    game = Game(args)
-    return game.run()
-
-# ---------- main ----------
 def main():
-    # 1) lees env
-    start = _start_env()
-    snap = False
-
-    # 2) interpreteer positionele subcommands
-    if not start:
-        pos_start, pos_snap = _compat_positional(sys.argv)
-        if pos_start:
-            start = pos_start
-            snap = pos_snap
-
-    # 3) argparse voor flags
     args = parse_args()
-    if start and not args.start:
-        args.start = start
-        args.scene = start
-    if snap:
-        args.snapshot = True
+    # START via env of positioneel compat (km/w0/shot) blijft beschikbaar:
+    start_env = os.getenv("KM_START", "").strip()
+    if start_env and not args.start:
+        args.start = start_env; args.scene = start_env
 
-    # 4) dispatch
-    if args.start in ('menu', 'level0', 'l0', 'km'):
+    # dispatch: --scene voor frames, --start voor flows
+    if args.scene:
+        game = Game(args)
         if args.snapshot:
-            # menu-snapshot = één frame
-            game = Game(args)
-            _final_frame_shot(game, max_seconds=0.0)
-            _save_shot(game, label='menu')
-            return
-        return run_menu()
+            _final_frame_shot(game, max_seconds=0.0); _save_shot(game, label=args.scene); return
+        return game.run()
+
+    if args.start in ("menu","level0","l0","km"):
+        game = Game(argparse.Namespace(**{**vars(args), "scene": "scene_picker"}))
+        if args.snapshot:
+            _final_frame_shot(game, max_seconds=0.0); _save_shot(game, label="menu"); return
+        return game.run()
 
     if args.start:
+        game = Game(args)
         if args.snapshot:
-            game = Game(args)
-            _final_frame_shot(game, max_seconds=180.0)
-            _save_shot(game, label=args.start)
-            return
-        return launch_world(args.start)
+            _final_frame_shot(game, max_seconds=180.0); _save_shot(game, label=args.start); return
+        return game.run()
 
-    # fallback
-    return run_menu()
+    # fallback -> menu
+    game = Game(argparse.Namespace(**{**vars(args), "scene": "scene_picker"}))
+    return game.run()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+
+

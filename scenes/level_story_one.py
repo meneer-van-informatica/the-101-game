@@ -1,4 +1,4 @@
-import math
+﻿import math
 import time
 import pygame
 
@@ -97,9 +97,9 @@ def _draw_dog(surface, center, t, blink_phase=False):
 
 class LevelStoryOne:
     """
-    W0 • Distance Zero
+    W0 â€¢ Distance Zero
     Intro: hond, Enter start
-    Film: 5x knipper — zwart/witte '0' ↔ wit/zwarte '1'
+    Film: 5x knipper â€” zwart/witte '0' â†” wit/zwarte '1'
     """
     wants_beat = True  # metronoom aan voor de intro
 
@@ -169,7 +169,7 @@ class LevelStoryOne:
         if self.mode == 'film':
             self.timer += dt
             if self.phase == 'zero' and self.timer >= self.dur_zero:
-                # knippermoment: ga naar ONE en tel één blink
+                # knippermoment: ga naar ONE en tel Ã©Ã©n blink
                 self.phase = 'one'
                 self.timer = 0.0
                 self.blinks_done += 1
@@ -190,9 +190,9 @@ class LevelStoryOne:
         if self.mode == 'intro':
             _soft_bg(screen)
             # titel
-            title = self.font_title.render('W0 • Distance Zero', True, (230, 240, 255))
+            title = self.font_title.render('W0 â€¢ Distance Zero', True, (230, 240, 255))
             screen.blit(title, (w//2 - title.get_width()//2, 48))
-            sub = self.font_sub.render('why indexing starts at 0 — feel the beat', True, (190, 200, 210))
+            sub = self.font_sub.render('why indexing starts at 0 â€” feel the beat', True, (190, 200, 210))
             screen.blit(sub, (w//2 - sub.get_width()//2, 48 + 44))
 
             # hond
@@ -202,7 +202,7 @@ class LevelStoryOne:
             # hint
             pulse = 0.5 + 0.5 * math.sin(self.t * 3.0)
             c = int(180 + 60 * pulse)
-            hint = self.font_hint.render('Press Enter to play • Esc to menu', True, (c, c, c))
+            hint = self.font_hint.render('Press Enter to play â€¢ Esc to menu', True, (c, c, c))
             screen.blit(hint, (w//2 - hint.get_width()//2, h - 64))
 
         elif self.mode == 'film':
@@ -224,6 +224,7 @@ class LevelStoryOne:
         # markeer voltooid, terug naar menu
         self.progress.mark_complete('level_story_one')
         self.next_scene = 'scene_picker'
+        self.next_scene = 'w0_f0_square'
         self.done = True
 
     def on_snapshot(self, screen, when="final"):
@@ -236,5 +237,10 @@ class LevelStoryOne:
         one = f_big.render("1", True, (240, 240, 240))
         w, h = screen.get_size()
         screen.blit(one, (w//2 - one.get_width()//2, h//2 - one.get_height()//2))
-        sub = f_sub.render("Distance Zero — end frame", True, (180, 180, 180))
+        sub = f_sub.render("Distance Zero â€” end frame", True, (180, 180, 180))
         screen.blit(sub, (w//2 - sub.get_width()//2, int(h*0.75)))
+
+
+
+
+
