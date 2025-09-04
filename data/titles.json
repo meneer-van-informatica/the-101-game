@@ -1,0 +1,6 @@
+﻿{
+  "level_story_one":   { "title": "W0 • Distance Zero",       "subtitle": "why indexing starts at 0, feel the beat" },
+  "typing_ad":         { "title": "W1 • Type Tempo",          "subtitle": "tap A/D in rhythm, build combos" },
+  "level7_spectro_mix":{ "title": "W2 • Spectro Mix",         "subtitle": "palettes, gain and speed" },
+  "world_w3_machines": { "title": "W3 • Machine Cathedral",   "subtitle": "finite states as music" }
+}
