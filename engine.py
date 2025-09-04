@@ -29,6 +29,10 @@ def import_scenes():
     from scenes.level7_spectro_mix import Level7SpectroMix
     from scenes.world_w3_machines import WorldW3Machines
     from scenes.w0_f0_square import W0F0Square
+    from scenes.w0_f1 import W0F1Life
+    from scenes.w0_f2 import W0F2Still
+    from scenes.w0_f3 import W0F3Outro
+
 
     registry = {
         "scene_picker":      ScenePicker,
@@ -39,6 +43,10 @@ def import_scenes():
         "world_w3_machines": WorldW3Machines,
         'w0_f0_square': W0F0Square,
         'f0': W0F0Square,
+        'w0_f1': W0F1Life,
+        'w0_f2': W0F2Still,
+        'w0_f3': W0F3Outro,
+
 
     }
 

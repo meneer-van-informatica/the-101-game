@@ -416,3 +416,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+/screenshots/
+/logs/
+/engine.py.bak
+/scenes/*.bak

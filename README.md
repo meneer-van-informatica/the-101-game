@@ -1,231 +1,67 @@
-# the-101-game
+# The 101 Game — Open Project
 
-Rammen-mode: je game eerst. Audio is onderliggend. Je krijgt 1) een **scene-runner** (W0–W9 in 1 woord), 2) **CLI-start per wereld** in de engine, 3) **must-have PS-commands** die je overal kunt plakken, 4) bonus: **F12 screenshot** en snelle settings-tweaks. Alles PowerShell-only, no mouse.
+**Meedoen? Leuk!** Dit is een open project voor leerlingen en makers. Je mag features voorstellen en bouwen — **merge gebeurt alleen na akkoord van de maintainer (👑 jij).**
 
-# 1) CLI: start elke wereld direct uit de engine
+## Hoe voeg je een feature toe?
 
-Voeg **scene-keuze** en **F12 screenshot** toe. Open `engine.py` en maak deze kleine patches.
+1) **Bespreek eerst**  
+   - Maak een Issue met label **proposal**.  
+   - Titel: `feat: <korte titel>`  
+   - Beschrijf: *Waarom*, *Wat is de UX*, *Wat is “Done”*, *Screens/shots (schetsen oké)*.
 
-**A. args: voeg `--scene` en `--shotdir` toe**
+2) **Fork & Branch**  
+   - Fork de repo.  
+   - Branch: `feat/<korte-naam>` (bijv. `feat/w0_f4_gol-oscillator`).
 
-```python
-def parse_args():
-    p = argparse.ArgumentParser(description='The 101 Game')
-    p.add_argument('--silent', action='store_true', help='skip audio init but still render/update')
-    p.add_argument('--windowed', action='store_true', help='force windowed mode (override settings)')
-    p.add_argument('--scene', type=str, default='', help='start scene by key (e.g. level_story_one) or index (e.g. 0..9)')
-    p.add_argument('--shotdir', type=str, default='screenshots', help='folder for F12 screenshots')
-    return p.parse_args()
-```
+3) **Bouw minimaal, werkend, testbaar**  
+   - Nieuwe scene? Plaats ‘m in `scenes/` met duidelijke naam (bijv. `w0_f4_*.py`).  
+   - Houd scenes **klein** (één doel). Gebruik bestaande services uit `engine.py` (`audio`, `tts`, `progress`).  
+   - Assets → `data/sfx/`, `data/music/` (noem bron/licentie in de PR).  
+   - UI-tekst: simpel, leesbaar; toetsen altijd onderin tonen.  
+   - Zorg dat het **zonder internet** draait.
 
-**B. helper om een scene te resolven (index of naam)**
-Zet dit boven je `class Game:` of als staticmethod in Game.
+4) **Check & bewijs**  
+   - Lokale sanity: `.\scripts\sanity.ps1` (PNG’s in `screenshots\sanity_*`).  
+   - Shots: `shot <scene>` en voeg 1–2 PNG’s toe aan de PR als bewijs.  
+   - Startflows die werken:
+     - `python engine.py --start w0_f0_square`
+     - `python engine.py --start w0_f1` / `w0_f2` / `w0_f3`
+     - `python engine.py --start w0 --snapshot`
+   - Geen tracebacks; console schoon (behalve bekende pygame-warning).
 
-```python
-def resolve_scene_key(requested: str, default_key: str = 'scene_picker'):
-    if not requested:
-        return default_key
-    # index? probeer data/worlds.json in te lezen
-    try:
-        with open(os.path.join('data', 'worlds.json'), 'r', encoding='utf-8') as f:
-            worlds = json.load(f) or []
-    except Exception:
-        worlds = []
-    if requested.isdigit():
-        i = int(requested)
-        if 0 <= i < len(worlds):
-            return worlds[i]
-        return default_key
-    # anders neem de string als key
-    return requested
-```
+5) **Maak je PR**  
+   - Titel: `feat: <korte titel>`  
+   - Beschrijf: *Wat is nieuw*, *Controls*, *Hoe te testen*, *Screenshots*.  
+   - Beperk diff tot wat je nodig hebt (geen screenshots of .bak in Git).  
+   - Voeg je Issue-nummer toe: `Closes #123`.
 
-**C. gebruik ‘m bij je startscene**
-In `Game.__init__` (na `self.scene_classes = import_scenes()`):
+6) **Review & akkoord**  
+   - Maintainer checkt UX, code & performance.  
+   - Eventuele aanpassingen → pushen op dezelfde branch.  
+   - **Merge pas na maintainer-akkoord.**
 
-```python
-start_key = resolve_scene_key(getattr(args, 'scene', ''), 'scene_picker')
-self.scene_key, self.scene = make_scene(start_key, self.scene_classes, self.services)
-```
+### Definition of Done (acceptatiecriteria)
 
-**D. F12 screenshot in je event-loop**
-In `Game.run()` binnen `if e.type == pygame.KEYDOWN:` voeg toe:
+- [ ] Start en werkt met: `python engine.py --start <jouw-scene>`  
+- [ ] **Controls** in beeld en consistent met rest (L-click, Space, N, C, Esc, etc.)  
+- [ ] **Geen crashes**; `.\scripts\sanity.ps1` levert PNG’s op  
+- [ ] Shots toegevoegd in de PR-beschrijving  
+- [ ] Geen grote dependency erbij; geen zware assets  
+- [ ] Licenties voor meegeleverde assets vermeld
 
-```python
-if e.key == pygame.K_F12:
-    os.makedirs(getattr(args, 'shotdir', 'screenshots'), exist_ok=True)
-    ts = pygame.time.get_ticks()
-    path = os.path.join(getattr(args, 'shotdir', 'screenshots'), f'{self.scene_key}_{ts}.png')
-    pygame.image.save(self.screen, path)
-    print('[SHOT]', path)
-    continue
-```
+### Richtlijnen (kort)
 
-Nu kun je elke wereld direct starten:
+- **Naamgeving**: `w0_fN_<onderwerp>.py` voor W0; losse frames `frame_<naam>.py`.  
+- **Kleine PR’s** > grote PR’s. Houd engine-wijzigingen minimaal.  
+- **Code style**: Python 3.11+, geen zware frameworks; Pygame API; heldere functies.  
+- **Persist**: gebruik `Progress()` alleen als het echt nodig is (bijv. level-unlocks).  
+- **Audio**: gebruik synth-bleeps/sfx in `data/sfx`; volumes via `data/settings.json` (`sfx_volume`).  
+- **Niet committen**: `screenshots/`, `logs/`, `*.bak` (zie `.gitignore`).  
 
-```
-python engine.py --scene 0      # W0 via index uit data/worlds.json
-python engine.py --scene typing_ad
-python engine.py --scene dev_settings --windowed
-```
+> Tip: Gebruik `ts` om snel een timestamp-commit te pushen (handig voor CI en activiteit).
 
-# 2) Eén PS-script dat jouw flow turbo maakt
+---
 
-Maak `tools\game-dev.ps1` (new folder **tools**).
+*Maintainer note (alleen informatief):*  
+Je kunt jezelf als verplichte reviewer instellen via **CODEOWNERS**:
 
-```powershell
-# tools\game-dev.ps1  — rammen toolkit (importeer met: . .\tools\game-dev.ps1)
-
-$script:ROOT = (Get-Location).Path
-
-function _read-worlds {
-  if (Test-Path "$script:ROOT\data\worlds.json") {
-    try { (Get-Content "$script:ROOT\data\worlds.json" -Raw | ConvertFrom-Json) } catch { @() }
-  } else { @() }
-}
-
-function w {
-  param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Args)
-  $target = if ($Args.Count) { $Args[0] } else { "" }
-  python "$script:ROOT\engine.py" --scene $target
-}
-
-function wm { param([string]$Target="") python "$script:ROOT\engine.py" --windowed --scene $Target }
-function ws { param([string]$Target="") python "$script:ROOT\engine.py" --silent   --scene $Target }
-
-# snelle aliases w0..w9 (op basis van worlds.json index)
-1..10 | ForEach-Object {
-  $i = $_ - 1
-  Set-Item -Path Function:\("w$i") -Value ([scriptblock]::Create("python `"$script:ROOT\engine.py`" --scene $i"))
-}
-
-# dev helpers
-function mix { python "$script:ROOT\engine.py" --scene dev_settings }
-function bpm {
-  param([double]$Value)
-  if (-not $Value) { Write-Host "usage: bpm <number>"; return }
-  $s = if (Test-Path data\settings.json) { Get-Content data\settings.json -Raw | ConvertFrom-Json } else { New-Object psobject }
-  $s | Add-Member -NotePropertyName music_bpm -NotePropertyValue $Value -Force
-  $s | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 data\settings.json
-  Write-Host "BPM -> $Value"
-}
-function vol {
-  param([double]$Music, [double]$Sfx=$Music)
-  if ($null -eq $Music) { Write-Host "usage: vol <music 0..1> [sfx 0..1]"; return }
-  $s = (Get-Content data\settings.json -Raw | ConvertFrom-Json)
-  $s | Add-Member -NotePropertyName music_volume -NotePropertyValue $Music -Force
-  $s | Add-Member -NotePropertyName sfx_volume -NotePropertyValue $Sfx   -Force
-  $s | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 data\settings.json
-  Write-Host "Volumes -> music=$Music sfx=$Sfx"
-}
-
-# world scaffold
-function new-world {
-  param([Parameter(Mandatory=$true)][string]$Key)
-  $path = "scenes\$Key.py"
-  if (Test-Path $path) { Write-Warning "$path bestaat al"; return }
-  @"
-import pygame
-
-class $(($Key -replace '(^|_)(\w)', { $_.Groups[2].Value.ToUpper() }) ):
-    def __init__(self, services):
-        self.services = services
-        self.audio = services.get('audio')
-        self.progress = services.get('progress')
-        self.settings = services.get('settings', {})
-        self.font = pygame.font.SysFont(self.settings.get('font_name') or pygame.font.get_default_font(), 32)
-        self.next_scene = None
-        self.done = False
-        if self.audio: self.audio.play_for('$Key')
-
-    def handle_event(self, e):
-        if e.type == pygame.KEYDOWN and e.key in (pygame.K_RETURN, pygame.K_SPACE):
-            self.progress.mark_complete('$Key')
-            self.next_scene = 'scene_picker'
-        elif e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
-            self.next_scene = 'scene_picker'
-
-    def update(self, dt): pass
-
-    def draw(self, screen):
-        screen.fill((16,18,26))
-        txt = self.font.render('$Key', True, (230,240,255))
-        w,h = screen.get_size()
-        screen.blit(txt, (w//2 - txt.get_width()//2, h//2 - txt.get_height()//2))
-"@ | Set-Content -Encoding utf8 $path
-
-  # wereld registreren in data/worlds.json (achteraan toevoegen)
-  $worlds = _read-worlds
-  if ($worlds -isnot [System.Array]) { $worlds = @() }
-  if ($worlds -notcontains $Key) { $worlds = @($worlds + $Key) }
-  $worlds | ConvertTo-Json | Set-Content -Encoding utf8 data\worlds.json
-
-  Write-Host "World scaffolded: $path"
-}
-
-# screenshot vanuit CLI (zonder toetsen): rendert 1 frame en schrijft png
-function shot {
-  param([string]$Target = "")
-  python "$script:ROOT\engine.py" --scene $Target --windowed --shotdir screenshots
-}
-```
-
-**Gebruik (in projectroot):**
-
-```powershell
-. .\tools\game-dev.ps1     # 1x per shell
-
-w0                         # start W0 
-w 3                        # start W3 via index
-w typing_ad                # start per key
-wm 0                       # windowed
-mix                        # ESC/Mixer scene
-bpm 96                     # tempo live voor volgende run
-vol 0.5 0.6                # music 50%, sfx 60%
-new-world world_w4_city    # scaffold W4 en registreer in worlds.json
-shot 0                     # screenshot van W0 naar screenshots\
-```
-
-# 3) Must-have commands (écht rammen)
-
-**Run & iterate**
-
-* `w0` / `w1` … `w9` — start een wereld direct
-* `w <key|index>` — generiek
-* `wm <...>` — windowed (presentatie/recording)
-* `ws <...>` — silent (CI of zonder audio device)
-* `mix` — meteen de Mixer/ESC-scene
-
-**Project hygiene**
-
-* `bpm <n>` / `vol <m> [s]` — settings zonder file openen
-* `new-world <key>` — scene scaffold + worlds.json update
-* `shot <scene>` — PNG screenshot wegschrijven (F12 ook in-game)
-
-**Git (dag-ritme)**
-
-* Checkpoint klein & vaak
-* Branch per feature: `git switch -c feat/w4-city`
-* Rebase light: `git pull --rebase`
-* Tag releases: `git tag v0.3.0; git push origin v0.3.0`
-* Stash snel: `git stash -k` (houd staged) / `git stash pop`
-
-# 4) (Optioneel) r-alias voor ultiem kort
-
-Wil je 1 letter voor W0 in deze repo?
-
-```powershell
-Set-Content -Encoding ascii -NoNewline .\r.bat 'python .\engine.py --scene 0 %*'
-Set-Alias r '.\r.bat'
-r
-```
-
-Rammen = korte loops: `new-world`, `wN`, tweak, F12, commit. Geen muis, nul frictie.
-
-**Copy-paste: commit & push**
-
-```powershell
-git add -A
-git commit -m "dev: scene runner CLI (--scene), F12 screenshots, tools/game-dev.ps1 with w/wm/ws/w0..w9, bpm/vol, new-world, shot"
-git push
-```
