@@ -8,34 +8,6 @@ from core import audio as audio_mod
 from core.tts import Voice
 from core.progress import Progress
 
-def resolve_cli_scene(cli: str, scene_classes: dict) -> str | None:
-    if not cli:
-        return None
-    cli = cli.strip().lower()
-    import os, json
-    # wN → worlds.json
-    if len(cli) >= 2 and cli[0] == "w" and cli[1:].isdigit():
-        try:
-            worlds = load_json(os.path.join("data", "worlds.json"), [])
-            idx = int(cli[1:])
-            if 0 <= idx < len(worlds):
-                return worlds[idx]
-        except Exception:
-            return None
-    # numeriek index
-    if cli.isdigit():
-        try:
-            worlds = load_json(os.path.join("data", "worlds.json"), [])
-            idx = int(cli)
-            if 0 <= idx < len(worlds):
-                return worlds[idx]
-        except Exception:
-            return None
-    # directe key
-    if cli in scene_classes:
-        return cli
-    return None
-
 
 # ---------- utils ----------
 
@@ -117,7 +89,7 @@ class Game:
         # display
         self.size = (1280, 720)
         self.apply_display_mode()
-        pygame.display.set_caption('The 101 Game â€¢ PyGame Ã— Audio')
+        pygame.display.set_caption('The 101 Game • PyGame × Audio')
 
         # services
         self.silent = bool(args.silent)
@@ -150,39 +122,12 @@ class Game:
             'silent': self.silent,
         }
 
+        # scenes
         self.scene_classes = import_scenes()
-
-        cli = (getattr(args, "scene", "") or "").strip().lower()
-        start_key = "scene_picker"
-
-        if cli:
-            key = None
-            # allow wN alias (e.g. w0, w1)
-            if len(cli) >= 2 and cli[0] == "w" and cli[1:].isdigit():
-                try:
-                    worlds = load_json(os.path.join("data", "worlds.json"), [])
-                    idx = int(cli[1:])
-                    if 0 <= idx < len(worlds):
-                        key = worlds[idx]
-                except Exception:
-                    key = None
-            # numeric index "0"
-            elif cli.isdigit():
-                try:
-                    worlds = load_json(os.path.join("data", "worlds.json"), [])
-                    idx = int(cli)
-                    if 0 <= idx < len(worlds):
-                        key = worlds[idx]
-                except Exception:
-                    key = None
-            # direct key
-            elif cli in self.scene_classes:
-                key = cli
-
-            if key:
-                start_key = key
-
+        self.scene_key, self.scene = make_scene('scene_picker', self.scene_classes, self.services)
+        start_key = resolve_scene_key(getattr(args, 'scene', ''), 'scene_picker')       
         self.scene_key, self.scene = make_scene(start_key, self.scene_classes, self.services)
+
 
         # timing
         self.clock = pygame.time.Clock()
@@ -218,46 +163,11 @@ class Game:
             dt_ms = self.clock.tick(self.target_fps)
             dt = dt_ms / 1000.0
 
-            # snapshot mode: render "final" frame and quit
-            if getattr(self, 'args', None) is None:
-                self.args = parse_args()
-            if getattr(self.args, 'snapshot', False):
-                drew = False
-                if hasattr(self.scene, "on_snapshot"):
-                    try:
-                        self.scene.on_snapshot(self.screen, when="final")
-                        drew = True
-                    except Exception as ex:
-                        print("[snapshot hook error]", ex)
-                if not drew:
-                    try:
-                        for _ in range(180):  # ~3s @60fps
-                            self.scene.update(1.0/60.0)
-                    except Exception:
-                        pass
-                    try:
-                        self.scene.draw(self.screen)
-                    except Exception as ex:
-                        self.draw_fallback(ex)
-
-                pygame.display.flip()
-                os.makedirs(getattr(self.args, 'shotdir', 'screenshots'), exist_ok=True)
-                import time
-                path = os.path.join(self.args.shotdir, f"{self.scene_key}_{int(time.time())}.png")
-                pygame.image.save(self.screen, path)
-                print("[SHOT]", path)
-                self.quit()
-                continue
-
             # events
             for e in pygame.event.get():
                 if e.type == pygame.QUIT:
                     self.quit(); continue
                 if e.type == pygame.KEYDOWN:
-                    # Global: ESC -> mixer (Dev Settings)
-                    if e.key == pygame.K_ESCAPE:
-                        self.switch_scene('dev_settings')
-                        continue
                     if e.key == pygame.K_F12:
                         os.makedirs(getattr(args, 'shotdir', 'screenshots'), exist_ok=True)
                         ts = pygame.time.get_ticks()
@@ -356,11 +266,9 @@ def parse_args():
     p = argparse.ArgumentParser(description='The 101 Game')
     p.add_argument('--silent', action='store_true', help='skip audio init but still render/update')
     p.add_argument('--windowed', action='store_true', help='force windowed mode (override settings)')
-    p.add_argument('--scene', type=str, default='', help='start scene by key or index (e.g. w0, 0, typing_ad)')
-    p.add_argument('--shotdir', type=str, default='screenshots', help='folder for F12/snapshot screenshots')
-    p.add_argument('--snapshot', action='store_true', help='render a single frame, save PNG, then exit')
+    p.add_argument('--scene', type=str, default='', help='start scene by key (e.g. level_story_one) or index (e.g. 0..9)')
+    p.add_argument('--shotdir', type=str, default='screenshots', help='folder for F12 screenshots')
     return p.parse_args()
-
 
 def main():
     Game(parse_args()).run()
@@ -368,4 +276,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

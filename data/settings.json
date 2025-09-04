@@ -1,8 +1,8 @@
 ﻿{
-    "music_bpm":  90,
-    "target_fps":  60,
-    "font_name":  "consolas",
-    "fullscreen":  true,
-    "music_volume":  0.5,
-    "sfx_volume":  0.5
+  "fullscreen": true,
+  "music_bpm": 96,
+  "target_fps": 60,
+  "font_name": "consolas",
+  "music_volume": 0.5,
+  "sfx_volume": 0.5
 }

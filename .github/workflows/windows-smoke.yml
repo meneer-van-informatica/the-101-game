@@ -1,0 +1,23 @@
+name: windows-smoke
+on: [push, pull_request]
+jobs:
+  smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Install pygame
+        run: python -m pip install pygame
+      - name: Headless sanity (import + init + quit)
+        env:
+          SDL_AUDIODRIVER: dummy
+          SDL_VIDEODRIVER: dummy
+        run: |
+          python - << "PY"
+          import pygame
+          pygame.mixer.init()
+          pygame.display.init()
+          print("pygame ok")
+          pygame.quit()
+          PY

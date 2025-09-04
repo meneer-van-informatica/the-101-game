@@ -1,4 +1,4 @@
-﻿import math
+import math
 import time
 import pygame
 
@@ -225,3 +225,16 @@ class LevelStoryOne:
         self.progress.mark_complete('level_story_one')
         self.next_scene = 'scene_picker'
         self.done = True
+
+    def on_snapshot(self, screen, when="final"):
+        # Draw the end-card of the short film: big "1" centered
+        import pygame
+        screen.fill((0, 0, 0))
+        name = self.settings.get("font_name", None) or pygame.font.get_default_font()
+        f_big = pygame.font.SysFont(name, 220, bold=True)
+        f_sub = pygame.font.SysFont(name, 36)
+        one = f_big.render("1", True, (240, 240, 240))
+        w, h = screen.get_size()
+        screen.blit(one, (w//2 - one.get_width()//2, h//2 - one.get_height()//2))
+        sub = f_sub.render("Distance Zero — end frame", True, (180, 180, 180))
+        screen.blit(sub, (w//2 - sub.get_width()//2, int(h*0.75)))
