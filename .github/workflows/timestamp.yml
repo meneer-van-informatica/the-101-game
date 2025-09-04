@@ -1,0 +1,36 @@
+﻿name: Timestamp
+on:
+  workflow_dispatch:   # handmatig aftrappen
+  schedule:            # elk uur (UTC); in job gebruiken we Amsterdam-tijd
+    - cron: "0 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  stamp:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Amsterdam
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log timestamp (altijd)
+        run: |
+          echo "Now: $(date +'%Y-%m-%d %H:%M:%S %Z')"
+
+      # Alleen bij 'schedule' committen (niet bij push/dispatch  voorkomt loops)
+      - name: Commit timestamp (alleen scheduled 09:00 Amsterdam)
+        if: ${{ github.event_name == 'schedule' && env.TZ }}
+        run: |
+          if [ "$(date +%H)" != "09" ]; then
+            echo "Not 09:00 Amsterdam; skip commit."
+            exit 0
+          fi
+          mkdir -p logs
+          echo "Last run: $(date +'%Y-%m-%d %H:%M:%S %Z')" > logs/last-run.txt
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add logs/last-run.txt
+          git commit -m "chore(ts): update timestamp [skip ci]" || exit 0
+          git push
