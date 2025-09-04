@@ -1,4 +1,4 @@
-﻿if (-not $script:ROOT) { $script:ROOT = (Get-Location).Path }
+if (-not $script:ROOT) { $script:ROOT = (Get-Location).Path }
 $PY = Join-Path $script:ROOT ".venv\Scripts\python.exe"
 if (-not (Test-Path $PY)) { $PY = "python" }
 
@@ -445,5 +445,28 @@ function stop {
     }
   } else {
     Write-Host "[stop] committed locally â€¢ tag $tag (no push)" -ForegroundColor Green
+  }
+}
+
+function esc {
+  [CmdletBinding()]
+  param(
+    [switch]$Run   # use -Run to launch the scene instead of opening the file
+  )
+  if (-not $script:ROOT) { $script:ROOT = (Get-Location).Path }
+  $path = Join-Path $script:ROOT 'scenes\dev_settings.py'
+  if ($Run) {
+    $py = Join-Path $script:ROOT '.venv\Scripts\python.exe'
+    if (-not (Test-Path $py)) { $py = 'python' }
+    & $py "$script:ROOT\engine.py" --windowed --scene dev_settings
+    return
+  }
+  if (Get-Command vs -ErrorAction SilentlyContinue) {
+    vs $path       # opens in Visual Studio (your 'vs' auto-creates if missing)
+  } elseif (Get-Command code -ErrorAction SilentlyContinue) {
+    code -g "$path":1
+  } else {
+    Write-Host $path
+    Start-Process $path
   }
 }
