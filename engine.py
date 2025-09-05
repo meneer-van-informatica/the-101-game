@@ -1,6 +1,9 @@
-﻿# engine.py — frames + shots + autodiscovery
+﻿ABOUT = "the-101-game — Alchemist build v0.1.1\nPull → play.bat → Play.\n(Volg Mij en het Komt Goed, lul. - LMW)"
+
+# engine.py — frames + shots + autodiscovery
 import os, sys, json, argparse, importlib, pkgutil, inspect
 import pygame
+pygame.display.set_caption("the-101-game — Alchemist v0.1.1")
 
 from core import audio as audio_mod
 from core.tts import Voice
