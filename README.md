@@ -4,6 +4,11 @@
 ```powershell
 .\play.bat
 
+### World shortcuts
+- **Start W0 (first world):**
+  ```powershell
+  .\w0.bat
+
 # The 101 Game — Open Project
 
 **Meedoen? Leuk!** Dit is een open project voor leerlingen en makers. Je mag features voorstellen en bouwen — **merge gebeurt alleen na akkoord van de maintainer (👑 jij).**
