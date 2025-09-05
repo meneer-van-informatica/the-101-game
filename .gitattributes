@@ -1,2 +1,5 @@
-﻿* text=auto eol=lf
-*.bat text eol=crlf
+﻿*.md   text eol=lf
+*.ps1  text eol=lf
+*.yml  text eol=lf
+*.bat  text eol=crlf
+*      text=auto
