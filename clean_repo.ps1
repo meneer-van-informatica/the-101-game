@@ -17,11 +17,12 @@ $keep = @(
 # verzamel alles in root
 $items = Get-ChildItem -Force
 
-# bepaal wat weg mag (alles dat niet in $keep staat)
+# bepaal wat weg mag (alles dat niet in $keep staat), MAAR sla _trash en de cleaner zelf over
 $move = @()
 foreach ($i in $items) {
-  if ($keep -contains $i.Name) { continue }
-  $move += $i
+  if ($i.Name -eq '_trash') { continue }
+  if ($i.Name -eq 'clean_repo.ps1') { continue }
+  if ($keep -notcontains $i.Name) { $move += $i }
 }
 
 if (-not $Apply) {
