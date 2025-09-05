@@ -1,22 +1,24 @@
 ﻿# Contributing
 
-Thanks for considering a contribution! This project follows an **AI-first** workflow.
+## New Programmer Workflow
+1. Fork en clone.
+2. Run lokaal met `.\play.bat`.
+3. Branch: `git checkout -b feat/<onderwerp>`.
+4. Laat AI een mini-plan schrijven en voer het zelf uit.
+5. Test met `.\play.bat`.
+6. Commit klein met Conventional Commits:
+   - `feat: ...`, `fix: ...`, `docs: ...`, `chore: ...`, `refactor: ...`
+7. Push en open een Pull Request.
+8. Beschrijf wat en waarom, link issues, voeg korte testnotitie toe.
 
-## How to contribute
-1. Open an issue describing the change.
-2. Generate your code via AI.
-3. Ensure every new/changed source file starts with an **AI-Generated** header:
-   - Python: `# AI-Generated: Model=..., Date=..., Prompt="..."` (+ License line)
-   - PowerShell: `# AI-Generated: ...`
-   - Batch: `REM AI-Generated: ...`
-4. Run locally: `.\play.bat`
-5. Submit a PR with a short demo (gif/screenshot) if UI changes.
+## Coding standards
+- Windows-first: PowerShell en Python.
+- Geen muis-stappen; alles via CLI.
+- Gebruik `.venv`, geen globale installs.
+- Commit geen secrets.
 
-## Scope / Level design
-- 10 worlds × 10 levels + 1 final boss = 101.
-- Level rhythm: **[Hook 5s] [Do 40s] [Proof 15s] [Next 1s]**
-- Each level teaches **exactly one thing**.
-
-## License & provenance
-- MIT license (repo).
-- Keep headers up to date on refactors.
+## Setup hints
+```powershell
+.\play.bat
+```
+- Autocreates venv, upgrades pip, en installeert `requirements.txt`.

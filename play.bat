@@ -1,20 +1,22 @@
 @echo off
-setlocal
-pushd "%~dp0"
+setlocal enableextensions
 
-REM Gebruik venv of bootstrap 'm
-if not exist ".venv\Scripts\python.exe" (
-  echo [play] geen venv gevonden -> bootstrap...
-  powershell -NoProfile -ExecutionPolicy Bypass -File ".\bootstrap.ps1"
+if not exist .venv (
+  py -3 -m venv .venv
 )
 
-REM Start engine
-if exist ".venv\Scripts\python.exe" (
-  ".venv\Scripts\python.exe" "engine.py" %*
-) else (
-  REM fallback (als bootstrap faalde maar systeem-python bestaat)
-  python "engine.py" %*
+call .venv\Scripts\activate.bat
+python -m pip install --upgrade pip >nul
+if exist requirements.txt (
+  pip install -r requirements.txt
 )
 
-popd
-endlocal
+for %%F in (game.py app.py main.py) do (
+  if exist %%F (
+    python %%F
+    goto end
+  )
+)
+
+echo No entry point found. Add game.py or app.py or main.py.
+:end

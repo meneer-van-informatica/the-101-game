@@ -1,18 +1,6 @@
-# venv / caches
-.venv/
+﻿.venv/
 __pycache__/
 *.pyc
-
-# IDE / OS
-.vscode/
-.idea/
-*.swp
-.DS_Store
-Thumbs.db
-
-# run-time
-logs/
+*.pyo
 *.log
-screenshots/
-
-_trash/
+.vscode/
