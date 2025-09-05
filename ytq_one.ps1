@@ -1,10 +1,15 @@
 param(
   [Parameter(Mandatory=$true)][string]$Url,
   [string]$Langs = 'nl,en',
-  [int]$Seed = 0,
+  [string]$Seed = '0',           # <- string, we parsen zelf veilig
   [string]$OutDir = "$env:USERPROFILE\Documents\ytq",
   [switch]$Polish
 )
+
+# seed veilig parsen: alles wat niet int is → 0
+[int]$SeedInt = 0
+[void][int]::TryParse(($Seed -as [string]), [ref]$SeedInt)
+
 
 function Get-YouTubeId([string]$u) {
   if ($u -match '^[A-Za-z0-9_-]{11}$') { return $u }
@@ -67,8 +72,8 @@ if (-not $sent -or $sent.Count -lt 1) {
 }
 if (-not $sent) { Write-Error 'geen bruikbare zinnen'; exit 1 }
 
-# Random pick
-if ($Seed -ne 0) { $rand = New-Object System.Random($Seed) } else { $rand = New-Object System.Random }
+# Random pick (gebruik SeedInt)
+if ($SeedInt -ne 0) { $rand = New-Object System.Random($SeedInt) } else { $rand = New-Object System.Random }
 $pick  = $sent[$rand.Next(0,$sent.Count)]
 
 # Optionele NL-polish (stil; werkt alleen als Java+LT aanwezig)
@@ -112,14 +117,13 @@ except Exception:
 $quote = Fix-NL $pick
 if ($quote.Length -ge 1) { $quote = $quote.Substring(0,1).ToUpper() + $quote.Substring(1) }
 if ($quote -notmatch '[\.\!\?…]$') { $quote += '.' }
-$quoteForMd = $quote -replace '''','''''  # escape enkele quotes
 
-# Output – simpel, regel-voor-regel (PS5.1-safe)
+# Output – PS5.1-safe, zonder rare quotes
 $mdPath = Join-Path $OutDir ("quote_" + $vid + "_" + $date + ".md")
 if (Test-Path $mdPath) { Remove-Item $mdPath -ErrorAction SilentlyContinue }
 Add-Content -Path $mdPath -Value "# Les 0  Esko 101 quote" -Encoding utf8
 Add-Content -Path $mdPath -Value "" -Encoding utf8
-Add-Content -Path $mdPath -Value ("Quote: '" + $quoteForMd + "'") -Encoding utf8
+Add-Content -Path $mdPath -Value ("Quote: `'$quote`'") -Encoding utf8
 Add-Content -Path $mdPath -Value "" -Encoding utf8
 Add-Content -Path $mdPath -Value "Waarom:" -Encoding utf8
 Add-Content -Path $mdPath -Value "" -Encoding utf8
@@ -127,6 +131,6 @@ Add-Content -Path $mdPath -Value "Vraag voor de klas:" -Encoding utf8
 
 Remove-Item $txt -ErrorAction SilentlyContinue
 
-$display = "'" + $quote + "'"
-Write-Output $display
+Write-Output ("`'$quote`'")
 Write-Output ("md geschreven: " + $mdPath)
+

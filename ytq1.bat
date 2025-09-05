@@ -10,4 +10,4 @@ set LANGS=%~2
 set SEED=%~3
 if "%LANGS%"=="" set LANGS=nl,en
 if "%SEED%"=="" set SEED=0
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ytq_one.ps1" -Url "%URL%" -Langs %LANGS% -Seed %SEED%
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ytq_one.ps1" -Url "%URL%" -Langs "%LANGS%" -Seed "%SEED%"
