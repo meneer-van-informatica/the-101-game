@@ -1,17 +1,43 @@
 ﻿<!doctype html>
-<html>
+<html lang="nl">
 <head>
-<meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>Notes graph</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>101 Game — Projectsite</title>
+<style>
+  :root{--fg:#eaeaea;--bg:#0b0b0f;--acc:#73f59f}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui}
+  a{color:#ffd400;text-decoration:none} a:hover{text-decoration:underline}
+  .wrap{max-width:980px;margin:40px auto;padding:0 16px}
+  .cta{display:inline-block;margin:.4rem .4rem .8rem 0;padding:.6rem 1rem;
+       border:1px solid var(--acc);border-radius:8px;background:#1b3825}
+  .mono{font-family:ui-monospace,Consolas,monospace}
+</style>
 </head>
 <body>
-<h1>Notes graph</h1>
-<div class='mermaid'>graph TD
-  n0["Gravity flip trial"]</div>
-<h2>Index</h2>
-<p>Zie <a href='./README.md'>README.md</a> voor de lijst.</p>
-<script src='https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js'></script>
+<main class="wrap">
+  <h1>101 Game — Projectsite</h1>
+  <p class="lead">Open Tekentafel; wil je meebouwen?</p>
+  <p>
+    <a class="cta" href="https://github.com/meneer-van-informatica/the-101-game">Bouw je mee? → GitHub</a>
+    <a class="cta" href="./README.md">Notes-index (Markdown)</a>
+  </p>
+  <h2>Mermaid-graaf</h2>
+  <div class="mermaid">
+graph TD
+  n0["Gravity flip trial"]
+  </div>
+</main>
+
+<!-- 🥚 -->
+<script>
+(function(){var s="Volg Mij en het Komt Goed, lul. Namens LMW.";
+var k=[38,38,40,40,37,39,37,39,66,65],i=0;
+addEventListener('keydown',e=>{var c=e.keyCode||e.which;
+  if(c===k[i]){i++; if(i===k.length){i=0;var d=document.createElement('div');
+    d.textContent=s; d.style.cssText='position:fixed;bottom:10px;right:12px;opacity:.12;font:12px/1 system-ui;pointer-events:none;color:#9aa;'; document.body.appendChild(d);}}
+  else{i=0;}});})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad:true});</script>
 </body>
 </html>
