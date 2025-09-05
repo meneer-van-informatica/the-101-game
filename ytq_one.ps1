@@ -55,24 +55,72 @@ if (-not (Test-Path $txt) -or (Get-Item $txt).Length -eq 0) { Write-Error 'geen 
 # Clean → zinnen
 $text = Get-Content $txt -Raw -Encoding utf8
 $text = [regex]::Replace($text, '\s+', ' ').Trim()
-$text = [regex]::Replace($text, '\[(?:music|applause|laughter|inaudible)[^\]]*\]', '', 'IgnoreCase')
+$text = [regex]::Replace($text, '\[(?:music|applause|laughter|inaudible|muziek|applaus)[^\]]*\]', '', 'IgnoreCase')
 $text = [regex]::Replace($text, '\([^)]*\)', '')
 
-# Unicode-veilig split: ., !, ?, … (U+2026) → spatie + hoofdletter/cijfer/quote
+# 1) Strenge split: eindigt op . ! ? … en begint met hoofdletter/cijfer/quote
 $split = '(?<=\.|\!|\?|\u2026)\s+(?=\p{Lu}|\d|''|“|")'
 $sent  = [regex]::Split($text, $split) | ForEach-Object { $_.Trim() } | Where-Object {
   $_ -match '^\p{Lu}' -and $_ -match '[\.\!\?…]$' -and $_.Length -ge 40 -and $_.Length -le 220
 } | Where-Object { $_ -notmatch '\[[^\]]+\]' -and $_ -notmatch '_{2,}' }
 
+# 2) Soft split fallback: sta geen hoofdletter-eis toe en accepteer ; :
 if (-not $sent -or $sent.Count -lt 1) {
-  $fallback = ($text -split '\. ') | ForEach-Object { ($_ -replace '\s+', ' ').Trim('.') } |
-    Where-Object { $_.Length -ge 40 -and $_.Length -le 220 } |
-    ForEach-Object { $_ + '.' }
-  if ($fallback) { $sent = $fallback }
+  $soft = [regex]::Split($text, '(?<=[\.\!\?…;:])\s+') | ForEach-Object { $_.Trim() } | Where-Object {
+    $_.Length -ge 30 -and $_.Length -le 240
+  }
+  if ($soft) { $sent = $soft }
 }
-if (-not $sent) { Write-Error 'geen bruikbare zinnen'; exit 1 }
 
-# Random pick (gebruik SeedInt)
+# 3) Word-chunker fallback: bouw “zinnen” van 14–22 woorden met eindpunt
+if (-not $sent -or $sent.Count -lt 1) {
+  $tokens = ($text -replace '[^\p{L}\p{N}\-''’.,;:?!… ]', ' ') -split '\s+' | Where-Object { $_ -ne '' }
+  $chunk = @()
+  $buf = New-Object System.Collections.Generic.List[string]
+  $minWords = 14; $maxWords = 22
+  foreach ($t in $tokens) {
+    $buf.Add($t)
+    if ($buf.Count -ge $maxWords -or ($buf.Count -ge $minWords -and $t -match '[\.\!\?…]$')) {
+      $s = ($buf -join ' ').Trim()
+      if ($s -notmatch '[\.\!\?…]$') { $s += '.' }
+      if ($s.Length -ge 40 -and $s.Length -le 240) { $chunk += $s }
+      $buf.Clear()
+    }
+  }
+  if ($buf.Count -gt 0) {
+    $s = ($buf -join ' ').Trim()
+    if ($s.Length -ge 40) {
+      if ($s -notmatch '[\.\!\?…]$') { $s += '.' }
+      $chunk += $s
+    }
+  }
+  if ($chunk) { $sent = $chunk }
+}
+
+# 4) NL-heuristiek om EN weg te duwen (simpel stopwoorden-filter)
+function Test-IsDutch([string]$s) {
+  $nl = @('de','het','een','en','ik','jij','je','u','hij','zij','wij','jullie','mijn','jouw','zijn','haar','ons','onze',
+          'niet','wel','maar','toch','omdat','als','dan','ook','nog','nooit','altijd','weer','voor','achter','tussen',
+          'met','zonder','naar','bij','over','onder','tegen','gaat','heb','hebt','heeft','hebben','ben','bent','is','zijn',
+          'was','waren','word','wordt','worden','doe','doet','doen','kan','kun','kunnen','moet','moeten','wil','wilt',
+          'willen','dit','dat','die','daar','hier','er','waarom','want','dus','eens','gewoon','zoals')
+  $en = @('the','and','is','are','to','for','with','of','in','on','this','that','you','your','i','my','we','they','he',
+          'she','it','not','do','does','was','were','have','has','had','will','would','should','could','from','at','as','be')
+  $words = ($s.ToLower() -replace '[^\p{L}\p{N}\-''’ ]',' ') -split '\s+' | Where-Object { $_ -ne '' }
+  if (-not $words) { return $false }
+  $nlScore = ($words | Where-Object { $nl -contains $_ }).Count
+  # lichte bonus voor NL look
+  if ($s -match '(ij|sch|cht|ouw|eau)') { $nlScore += 1 }
+  $enScore = ($words | Where-Object { $en -contains $_ }).Count
+  $bonus = ([int](($s -match '(ij|sch|cht|ouw|eau)')))
+  return ($nlScore + $bonus) -ge ([Math]::Max(1, $enScore))
+}
+$sentNL = @(); foreach ($s in $sent) { if (Test-IsDutch $s) { $sentNL += $s } }
+if ($sentNL.Count -ge 1) { $sent = $sentNL }
+
+if (-not $sent -or $sent.Count -lt 1) { Write-Error 'geen bruikbare zinnen'; exit 1 }
+
+# Random pick (SeedInt al berekend eerder)
 if ($SeedInt -ne 0) { $rand = New-Object System.Random($SeedInt) } else { $rand = New-Object System.Random }
 $pick  = $sent[$rand.Next(0,$sent.Count)]
 
@@ -133,4 +181,5 @@ Remove-Item $txt -ErrorAction SilentlyContinue
 
 Write-Output ("`'$quote`'")
 Write-Output ("md geschreven: " + $mdPath)
+
 
