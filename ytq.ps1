@@ -1,66 +1,44 @@
-param(
-    [Parameter(Mandatory=$true)][string]$Url,
-    [string]$Langs = 'nl,en',
-    [string]$OutPath
-)
-
-function Get-YouTubeId([string]$u) {
-    if ($u -match '^[A-Za-z0-9_-]{11}$') { return $u }
-    if ($u -match 'v=([A-Za-z0-9_-]{11})') { return $Matches[1] }
-    if ($u -match 'youtu\.be/([A-Za-z0-9_-]{11})') { return $Matches[1] }
-    return $u
-}
-
-# strip eventueel meegekomen aanhalingstekens uit -Langs
-$Langs = $Langs.Trim("'",'"','`')
-
-$vid = Get-YouTubeId $Url
-if (-not $OutPath) {
-    $date = Get-Date -Format 'yyyyMMdd'
-    $OutPath = Join-Path $env:USERPROFILE "Documents\transcript_${vid}_${date}.txt"
-}
-
-$pycode = @'
-from youtube_transcript_api import YouTubeTranscriptApi
-api = YouTubeTranscriptApi()
-vid = '{VID}'
-langs = '{LANGS}'.split(',')
-tx = api.fetch(vid, languages=langs)
-raw = tx.to_raw_data()
-print('\n'.join([t['text'] for t in raw]))
-'@
-$pycode = $pycode.Replace('{VID}', $vid).Replace('{LANGS}', $Langs)
-
-$tmppy = Join-Path $env:TEMP ('yt_tr_' + [guid]::NewGuid().ToString() + '.py')
-$pycode | Set-Content -Path $tmppy -Encoding utf8
-
-try {
-    python $tmppy | Tee-Object -FilePath $OutPath | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error 'Python transcript step failed.'
-        exit 1
-    }
-}
-finally {
-    Remove-Item $tmppy -ErrorAction SilentlyContinue
-}
-
-if (-not (Test-Path $OutPath)) {
-    Write-Error 'Transcript file not created.'
-    exit 1
-}
-
 $doc = Get-Content $OutPath -ErrorAction Stop
-$k = $doc | Where-Object { $_ -match '\S' -and $_.Length -ge 25 -and $_.Length -le 120 }
 
-'--- top 10 zinnen ---'
-$top = $k | Select-Object -First 10
-$top | ForEach-Object { "'$_'" }
+# 1) Maak één tekst en normaliseer spaties
+$text = ($doc -join ' ').Trim()
+$text = [regex]::Replace($text, '\s+', ' ')
 
-$pick = $k | Sort-Object Length -Descending | Select-Object -First 1
-'--- aanbevolen ---'
+# 2) Verwijder ruis (tussen [] of ())
+$text = [regex]::Replace($text, '\[(?:music|applause|laughter|inaudible)[^\]]*\]', '', 'IgnoreCase')
+$text = [regex]::Replace($text, '\([^)]*\)', '')
+
+# 3) Splits in zinnen op . ! ? … gevolgd door spatie + hoofdletter/quote/cijfer
+$splitPattern = '(?<=[\.\!\?…])\s+(?=[A-ZÀ-ÖØ-Þ0-9''”“""])'
+$sentences = [regex]::Split($text, $splitPattern) |
+    ForEach-Object { $_.Trim() } |
+    Where-Object { $_ -match '\S' -and $_.Length -ge 25 -and $_.Length -le 220 }
+
+# 4) Val terug op regels als zinnen leeg zijn
+if (-not $sentences -or $sentences.Count -lt 2) {
+    $sentences = $doc | ForEach-Object { $_.Trim() } |
+        Where-Object { $_ -match '\S' -and $_.Length -ge 25 -and $_.Length -le 220 }
+}
+
+# 5) Random keuzes
+$rand = New-Object System.Random
+$N = $sentences.Count
+$win = [Math]::Min(10, $N)
+$start = $rand.Next(0, [Math]::Max(1, $N - $win))
+$window = $sentences[$start..([Math]::Min($N-1, $start+$win-1))]
+$pick = $sentences[$rand.Next(0, $N)]
+
+# 6) Print output
+'--- willekeurige 10 opeenvolgende zinnen ---'
+$window | ForEach-Object { "'$_'" }
+'--- losse willekeurige quote ---'
 "'$pick'"
 
+# 7) Schrijf ook een .sentences.txt bestand
+$sentOut = [IO.Path]::ChangeExtension($OutPath,'sentences.txt')
+$sentences | Set-Content -Path $sentOut -Encoding utf8
+
+# 8) Maak de .md met de losse quote
 $md = @'
 # Les 0  Esko 101 quote
 
@@ -74,3 +52,4 @@ $md = $md.Replace('{QUOTE}', "'" + $pick + "'")
 $mdOut = [IO.Path]::ChangeExtension($OutPath,'md')
 $md | Set-Content -Path $mdOut -Encoding utf8
 'md geschreven: ' + $mdOut
+'zinregels geschreven: ' + $sentOut

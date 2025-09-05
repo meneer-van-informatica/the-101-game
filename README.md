@@ -1,3 +1,9 @@
+## Quick Start
+
+**Run de game**
+```powershell
+.\play.bat
+
 # The 101 Game — Open Project
 
 **Meedoen? Leuk!** Dit is een open project voor leerlingen en makers. Je mag features voorstellen en bouwen — **merge gebeurt alleen na akkoord van de maintainer (👑 jij).**
