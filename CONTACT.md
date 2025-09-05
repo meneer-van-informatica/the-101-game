@@ -1,8 +1,12 @@
 ﻿# Contact
 
-E-mail: dbn@fioretti.nl  
-Telefoon: +31 6 42503351
+Gebruik bij voorkeur GitHub Issues voor vragen, bugs en features.
 
-Voor security issues, zie SECURITY.md.
+**E-mail (alias)**  
+contact+101@jouwdomein.nl
 
-LMW
+**Beleid**  
+Geen telefonische support. Reageertermijn: 2 werkdagen.
+
+**Security**  
+Volg SECURITY.md voor kwetsbaarheden.
