@@ -21,3 +21,37 @@ function bleep{
 function blink{1..5|ForEach-Object{.\blink}}
 
 function bloop{bleep;blink;bleep;blink}
+
+function film {
+  $root='E:\the-101-game'
+  $venv="$root\.venv\Scripts"
+  $blink="$root\blink"
+  if(-not(Test-Path $blink)){$blink="$venv\blink.exe"}
+  $bleep="$root\bleep"
+  if(-not(Test-Path $bleep)){$bleep="$venv\bleep.exe"}
+  Start-Process powershell -ArgumentList ('-NoProfile -NoLogo -ExecutionPolicy Bypass -Command "& ''{0}''"' -f $blink)
+  Start-Process powershell -ArgumentList ('-NoProfile -NoLogo -ExecutionPolicy Bypass -Command "& ''{0}''"' -f $bleep)
+}
+
+function blink_shell {
+  $root='E:\the-101-game'
+  $venv=Join-Path $root '.venv\Scripts'
+  $tmp=Join-Path $env:TEMP 'blink_hue_elev.ps1'
+  $lines=@()
+  $lines+="Set-Location '$root'"
+  if($env:HUE_BRIDGE){$lines+="$([char]36)env:HUE_BRIDGE='$($env:HUE_BRIDGE)'"}
+  if($env:HUE_TOKEN){$lines+="$([char]36)env:HUE_TOKEN='$($env:HUE_TOKEN)'"}
+  if($env:HUE_LIGHTS){$lines+="$([char]36)env:HUE_LIGHTS='$($env:HUE_LIGHTS)'"}
+  $lines+='for($i=0;$i -lt 6;$i++){'
+  $lines+="  & '$venv\lamp-on.exe'"
+  $lines+="  & '$venv\bleep.exe'"
+  $lines+='  Start-Sleep -Milliseconds 250'
+  $lines+="  & '$venv\lamp-off.exe'"
+  $lines+="  & '$venv\bloop.exe'"
+  $lines+='  Start-Sleep -Milliseconds 250'
+  $lines+='}'
+  $lines+="Read-Host 'press Enter to close'"
+  Set-Content -Path $tmp -Value $lines -Encoding UTF8
+  Start-Process 'powershell.exe' -Verb RunAs -ArgumentList @('-NoProfile','-NoExit','-ExecutionPolicy','Bypass','-File',$tmp) -WorkingDirectory $root
+}
+
