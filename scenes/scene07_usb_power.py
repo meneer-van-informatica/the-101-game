@@ -21,7 +21,7 @@ def hud(title, lines, bright):
     fast_render(msg, BRIGHT if bright else DIM)
 
 def cycle_usb(instance_id:str):
-    script = os.path.join(os.path.dirname(__file__), "..", "scripts", "usb_try_power_cycle.ps1")
+    script = os.path.join(os.path.dirname(__file__), "..", "scripts", "usb_try_power_cycle_admin.ps1")
     script = os.path.abspath(script)
     args = ["-File", script, "-InstanceId", instance_id]
     r = powershell(args)
