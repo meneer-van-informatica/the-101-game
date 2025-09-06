@@ -4,3 +4,4 @@ scene03_life
 scene04_choice
 sceneC0_congrats
 sceneC1_wait
+sceneC2_mcq
