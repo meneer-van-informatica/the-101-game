@@ -3,6 +3,7 @@ scene02_afterglow
 scene03_life
 scene04_choice
 sceneC0_congrats
-sceneC1_wait
+sceneC1_hue_pair
+sceneC2_hue_status
 sceneC2_mcq
 sceneC3_wpm_timer
