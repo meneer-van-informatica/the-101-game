@@ -2,24 +2,22 @@
 $exe="$root\.venv\Scripts"
 
 function Invoke-SoftClear{Clear-Host;Write-Host '[ok] softclear'}
-Set-Alias cls Invoke-SoftClear -Force
+
+Set-PSReadLineKeyHandler -Key Enter -ScriptBlock {
+  $l=$null;$c=$null
+  [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$l,[ref]$c)
+  [Microsoft.PowerShell.PSConsoleReadLine]::Replace(0,$l.Length,'Invoke-SoftClear; '+$l)
+  [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+}
+
+function export{(Get-History|Format-List|Out-String)|Set-Clipboard;Write-Host '[ok] export → clipboard'}
 
 function bleep{
-  Invoke-SoftClear
-  if(Test-Path .\bleep){& .\bleep}
+  if(Test-Path '.\bleep'){& .\bleep}
   elseif(Test-Path "$exe\bleep.exe"){& "$exe\bleep.exe"}
   else{[console]::beep(1000,200);Write-Host '[ok] bleep (alert) klaar.'}
 }
 
-function blink{
-  Invoke-SoftClear
-  1..5 | ForEach-Object { .\blink }
-}
+function blink{1..5|ForEach-Object{.\blink}}
 
-function bloop{
-  Invoke-SoftClear
-  bleep
-  blink
-  bleep
-  blink
-}
+function bloop{bleep;blink;bleep;blink}
