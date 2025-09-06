@@ -1,22 +1,24 @@
 @echo off
-setlocal enableextensions
+REM play.bat — start de Film (Film x Game) vanaf de ketting
+REM Gebruik:
+REM   play.bat                -> film met pauze, standaard chain (data\scene_chain.txt)
+REM   play.bat C              -> film met pauze, route C (data\chain_economie.txt)
+REM   play.bat C sceneC1_hue_pair  -> route C en starten vanaf specifieke scene
 
-if not exist .venv (
-  py -3 -m venv .venv
-)
+setlocal
+cd /d "%~dp0"
 
-call .venv\Scripts\activate.bat
-python -m pip install --upgrade pip >nul
-if exist requirements.txt (
-  pip install -r requirements.txt
-)
+REM venv activeren als die bestaat
+if exist ".venv\Scripts\activate.bat" call ".venv\Scripts\activate.bat"
 
-for %%F in (game.py app.py main.py) do (
-  if exist %%F (
-    python %%F
-    goto end
-  )
-)
+REM Python-ansi/utf8 ok
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
 
-echo No entry point found. Add game.py or app.py or main.py.
-:end
+REM optionele args doorgeven aan film.ps1
+set "ARGS="
+if not "%~1"=="" set "ARGS=%ARGS% -Chain %~1"
+if not "%~2"=="" set "ARGS=%ARGS% -FromKey %~2"
+
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\film.ps1" %ARGS% -Pause
+exit /b %ERRORLEVEL%
