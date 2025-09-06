@@ -19,6 +19,11 @@ if /i "%~1"=="scene" (
   goto :eof
 )
 
+@if /I "%1"=="chain" powershell -ExecutionPolicy Bypass -File ".\scripts\play_chain.ps1"
+@if /I "%1"=="chaindev"  powershell -ExecutionPolicy Bypass -File ".\scripts\play_chain.ps1" -Dev -Transcript
+@if /I "%1"=="loop"      powershell -ExecutionPolicy Bypass -File ".\scripts\play_chain.ps1" -Dev -Transcript -Loop
+@if /I "%1"=="film" powershell -ExecutionPolicy Bypass -File ".\scripts\play_chain.ps1"
+
 echo usage:
 echo   .\km.bat last
 echo   .\km.bat scene ^<key^>
