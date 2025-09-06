@@ -1,20 +1,25 @@
 @echo off
 setlocal
-pushd "%~dp0"
+REM altijd naar de repo-root (map van dit bestand)
+cd /d %~dp0
 
-set "KM_ARGS=%*"
-if /I "%~1"=="w0" (
-  shift
-  set "KM_ARGS=--scene w0 %*"
+REM .\km.bat last  -> speel de laatste scene uit data\scene_chain.txt
+if /i "%~1"=="last" (
+  powershell -ExecutionPolicy Bypass -File ".\scripts\play_last.ps1"
+  goto :eof
 )
 
-if exist ".venv\Scripts\python.exe" (
-  ".venv\Scripts\python.exe" "engine.py" %KM_ARGS%
-) else if exist "play.bat" (
-  call "play.bat" %KM_ARGS%
-) else (
-  python "engine.py" %KM_ARGS%
+REM .\km.bat scene <key>  -> speel specifieke scene
+if /i "%~1"=="scene" (
+  if "%~2"=="" (
+    echo usage: km.bat scene ^<key^>
+    exit /b 1
+  )
+  powershell -ExecutionPolicy Bypass -File ".\scripts\play_scene.ps1" -Key %~2
+  goto :eof
 )
 
-popd
-endlocal
+echo usage:
+echo   .\km.bat last
+echo   .\km.bat scene ^<key^>
+exit /b 0
