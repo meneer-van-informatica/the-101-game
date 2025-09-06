@@ -1,6 +1,13 @@
-﻿*.md   text eol=lf
-*.ps1  text eol=lf
-*.yml  text eol=lf
-*.bat  text eol=crlf
-*      text=auto
-*.exe filter=lfs diff=lfs merge=lfs -text
+﻿* text=auto
+
+*.ps1 eol=crlf
+*.bat eol=crlf
+*.cmd eol=crlf
+
+*.py eol=lf
+*.sh eol=lf
+*.md eol=lf
+*.html eol=lf
+*.css eol=lf
+*.js eol=lf
+*.svg eol=lf

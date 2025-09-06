@@ -1,9 +1,0 @@
-LICENSE
-README.md
-pyproject.toml
-the_101_game/cli.py
-the_101_game.egg-info/PKG-INFO
-the_101_game.egg-info/SOURCES.txt
-the_101_game.egg-info/dependency_links.txt
-the_101_game.egg-info/entry_points.txt
-the_101_game.egg-info/top_level.txt

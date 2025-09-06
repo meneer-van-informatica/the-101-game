@@ -1,6 +1,0 @@
-# pack-refs with: peeled fully-peeled sorted 
-7dddb1cf41881bd1f001fa8618585efffdecfe02 refs/heads/main
-5c221eea9a1a77ff75090ae2c315efbae6a8fc9e refs/tags/snap-20250904_234707
-^b4193512950daae3950847dbefeef63a6e1a08ce
-3839912f7a69f3af1083fc7e9ed54c88f0d5de13 refs/tags/v0.1.0
-^6961ac4bb7b6c0fab780925dc8bcc8a2bbbf43cb

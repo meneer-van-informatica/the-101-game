@@ -1,2 +1,0 @@
-﻿regex:\b(\+31|0031)\s?6[-\s]?\d{8}\b==>[redacted]
-regex:\b0?6[-\s]?\d{8}\b==>[redacted]

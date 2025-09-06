@@ -14,3 +14,22 @@ data/logs/
 
 # pytest
 .pytest_cache/
+
+# python & env
+**/__pycache__/
+*.pyc
+*.pyo
+.venv/
+.pytest_cache/
+
+# logs & trash
+*.log
+_trash/
+data/logs/
+!data/logs/.gitkeep
+
+# build artefacts
+build/
+dist/
+*.egg-info/
+site/

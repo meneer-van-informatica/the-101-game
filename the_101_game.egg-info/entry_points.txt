@@ -1,7 +1,0 @@
-[console_scripts]
-bleep = the_101_game.cli:bleep
-blink = the_101_game.cli:blink
-bloop = the_101_game.cli:bloop
-green = the_101_game.cli:green
-lamp-off = the_101_game.cli:lamp_off
-lamp-on = the_101_game.cli:lamp_on
