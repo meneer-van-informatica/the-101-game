@@ -1,0 +1,4 @@
+LICEcap wordt meegeleverd voor onderwijsdoeleinden.
+Licentie: GNU General Public License (GPL).
+Broncode: https://github.com/justinfrankel/licecap
+Homepage: https://www.cockos.com/licecap/
