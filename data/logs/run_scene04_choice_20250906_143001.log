@@ -1,0 +1,61 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20250906143001
+Username: FIO-INF-1\Meneer
+RunAs User: FIO-INF-1\Meneer
+Configuration Name: 
+Machine: FIO-INF-1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File .\scripts\play_scene.ps1 -Key scene04_choice -Dev
+Process ID: 11188
+PSVersion: 5.1.26100.4768
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.4768
+BuildVersion: 10.0.26100.4768
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+  +---+---+---+---+---+---+---+---+
+4 |   |   |   |   |   |   |   |   | 4
+  +---+---+---+---+---+---+---+---+
+3 |   |   |   |   |   |   |   |   | 3
+  +---+---+---+---+---+---+---+---+
+2 | P | P | P | P | P | P | P | P | 2
+  +---+---+---+---+---+---+---+---+
+1 | R | N | B | Q | K | B | N | R | 1
+  +---+---+---+---+---+---+---+---+
+      a   b   c   d   e   f   g   h
+
+Beste zet voor jou (White): e4  —  (principe: centrum pakken, lijnen openen)
+
+ kies: [A] Software   [B] Hardware   [C] Economie   [D] #route-4   |   [q] stop
+
+--------------------------------------------------------------------------------
+  Scene 04: Choice  —  schaakbord + keuze
+  +---+---+---+---+---+---+---+---+
+8 | r | n | b | q | k | b | n | r | 8
+  +---+---+---+---+---+---+---+---+
+7 | p | p | p | p | p | p | p | p | 7
+  +---+---+---+---+---+---+---+---+
+6 |   |   |   |   |   |   |   |   | 6
+  +---+---+---+---+---+---+---+---+
+5 |   |   |   |   |   |   |   |   | 5
+  +---+---+---+---+---+---+---+---+
+4 |   |   |   |   |   |   |   |   | 4
+  +---+---+---+---+---+---+---+---+
+3 |   |   |   |   |   |   |   |   | 3
+  +---+---+---+---+---+---+---+---+
+2 | P | P | P | P | P | P | P | P | 2
+  +---+---+---+---+---+---+---+---+
+1 | R | N | B | Q | K | B | N | R | 1
+  +---+---+---+---+---+---+---+---+
+      a   b   c   d   e   f   g   h
+
+Beste zet voor jou (White): e4  —  (principe: centrum pakken, lijnen openen)
+
+ kies: [A] Software   [B] Hardware   [C] Economie   [D] #route-4   |   [q] stop
+**********************
+Windows PowerShell transcript end
+End time: 20250906143008
+**********************

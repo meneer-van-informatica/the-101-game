@@ -1,8 +1,7 @@
-﻿.venv/
+﻿# python
 __pycache__/
 *.pyc
-*.pyo
-*.log
+.venv/
+
+# vscode
 .vscode/
-data\*.ahk
-data\*.txt

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang='nl'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Tekentafel — The 101 Game</title>
+  <meta name='description' content='Open leerwereld: 10 werelden × 10 levels + L100 bossfight. Bouw mee, speel KM, bekijk de graaf, lees de docs.'>
+  <meta name='referrer' content='no-referrer-when-downgrade'>
+  <link rel='preconnect' href='https://cdn.jsdelivr.net'>
+  <link rel='stylesheet' href='/assets/style.css'>
+</head>
+<body>
+  <main>
+    <h1>Tekentafel — The 101 Game</h1>
+    <p>We bouwen samen aan de 101 Game — open, iteratief.</p>
+
+    <nav aria-label='Hoofdmenu'>
+      <ul>
+        <li><a href='https://github.com/meneer-van-informatica/the-101-game'>Bouw mee op GitHub</a></li>
+        <li><a href='/docs/'>Projectdocumentatie</a></li>
+        <li><a href='/docs/graph.html'>Mermaid-graaf</a></li>
+        <li><a href='/play/km/'>Speel KM</a></li>
+      </ul>
+    </nav>
+
+    <h2>Vage Visie</h2>
+    <ul>
+      <li>W0 Bits & Logica (L0–L9): binaire tel, XOR, K-map, adder</li>
+      <li>W1 Algoritmen (L10–L19): lineair/binair, sort, invariant</li>
+      <li>W2 Data & DB (L20–L29): ER, 1–3NF, select/project/join</li>
+      <li>W3 Machines (L30–L39): FSM, fetch-decode-execute, pijplijn</li>
+      <li>W4 Netwerken (L40–L49): pakket, DNS, HTTP, idempotent</li>
+      <li>W5 AI-Basics (L50–L59): split, verlies, metric, bias</li>
+      <li>W6 Robot-Choreo (L60–L69): states, millis-timing, tempo</li>
+      <li>W7 Sensor & Regel (L70–L79): ruis, Kalman-intuïtie, PID</li>
+      <li>W8 Product & Pitch (L80–L89): BOM, marge, poster, consent</li>
+      <li>W9 Ethiek & Show (L90–L99): veiligheid, no-face, publiek</li>
+      <li>L100 Finale: ’alles samen’ bossfight met 3 checks</li>
+    </ul>
+
+    <h2>Wereldkaart (Mermaid)</h2>
+    <pre class='mermaid'>
+      graph TD
+        W0['W0 Bits & Logica'] --> W1['W1 Algoritmen']
+        W1 --> W2['W2 Data & DB']
+        W2 --> W3['W3 Machines']
+        W3 --> W4['W4 Netwerken']
+        W4 --> W5['W5 AI-Basics']
+        W5 --> W6['W6 Robot-Choreo']
+        W6 --> W7['W7 Sensor & Regel']
+        W7 --> W8['W8 Product & Pitch']
+        W8 --> W9['W9 Ethiek & Show']
+        W9 --> L100['L100 Finale']
+    </pre>
+  </main>
+
+  <script type='module'>
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+  </script>
+</body>
+</html>

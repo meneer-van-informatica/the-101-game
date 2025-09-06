@@ -1,0 +1,5 @@
+:root { font-family: system-ui, sans-serif; line-height: 1.6; }
+body { margin: 2rem; }
+nav ul { list-style: none; padding: 0; display: flex; gap: 1rem; flex-wrap: wrap; }
+nav a { text-decoration: none; border-bottom: 1px solid currentColor; }
+pre.mermaid { border: 1px solid #ddd; padding: 1rem; overflow: auto; }
