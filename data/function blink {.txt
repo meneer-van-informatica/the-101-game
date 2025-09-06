@@ -1,0 +1,8 @@
+function blink {
+    while ($true) {
+        Write-Host 'BLINK' -ForegroundColor Green
+        Start-Sleep -Milliseconds 500
+        Clear-Host
+        Start-Sleep -Milliseconds 500
+    }
+}
