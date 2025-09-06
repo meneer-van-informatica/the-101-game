@@ -1,3 +1,24 @@
+[build-system]
+requires = ['setuptools>=68','wheel']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'the-101-game'
+version = '0.1.0'
+description = 'The 101 Game CLI tools'
+readme = 'README.md'
+requires-python = '>=3.10'
+authors = [{ name = 'Lucas de Bruin' }]
+dependencies = []
+
 [project.scripts]
 blink = 'the_101_game.cli:blink'
 bleep = 'the_101_game.cli:bleep'
+bloop = 'the_101_game.cli:bloop'
+lamp-on = 'the_101_game.cli:lamp_on'
+lamp-off = 'the_101_game.cli:lamp_off'
+green = 'the_101_game.cli:green'
+
+[tool.setuptools.packages.find]
+where = ['.']
+include = ['the_101_game*']
