@@ -24,13 +24,8 @@ function bloop{bleep;blink;bleep;blink}
 
 function film {
   $root='E:\the-101-game'
-  $venv="$root\.venv\Scripts"
-  $blink="$root\blink"
-  if(-not(Test-Path $blink)){$blink="$venv\blink.exe"}
-  $bleep="$root\bleep"
-  if(-not(Test-Path $bleep)){$bleep="$venv\bleep.exe"}
-  Start-Process powershell -ArgumentList ('-NoProfile -NoLogo -ExecutionPolicy Bypass -Command "& ''{0}''"' -f $blink)
-  Start-Process powershell -ArgumentList ('-NoProfile -NoLogo -ExecutionPolicy Bypass -Command "& ''{0}''"' -f $bleep)
+  Start-Process 'powershell.exe' -ArgumentList @('-NoProfile','-NoLogo','-ExecutionPolicy','Bypass','-Command',"& '.\blink'") -WorkingDirectory $root
+  Start-Process 'powershell.exe' -ArgumentList @('-NoProfile','-NoLogo','-ExecutionPolicy','Bypass','-Command',"& '.\bleep'") -WorkingDirectory $root
 }
 
 function blink_shell {
@@ -54,4 +49,6 @@ function blink_shell {
   Set-Content -Path $tmp -Value $lines -Encoding UTF8
   Start-Process 'powershell.exe' -Verb RunAs -ArgumentList @('-NoProfile','-NoExit','-ExecutionPolicy','Bypass','-File',$tmp) -WorkingDirectory $root
 }
+
+function p { notepad 'E:\the-101-game\profile.ps1' }
 
