@@ -7,3 +7,4 @@ scene06_usb_watch
 scene07_usb_power
 scene06_usb_sim
 scene07_power_sim
+scene08_dr_bibber
