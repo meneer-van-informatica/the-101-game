@@ -1,9 +1,9 @@
-# scenes/sceneC3_wpm_timer.py — 1-minuut WPM/BPM timer met "TikTok"-achtige ticks
-# - Countdown van 60s (of via -minutes)
-# - BPM aanpasbaar met +/-  (accent op elke 4e beat)
-# - Mute/unmute met 'm'
-# - Realtime WPM = (getelde chars / 5) / (verstreken_minuten)
-# - Any key telt als 1 char (optioneel: spatie telt ook)
+# scenes/sceneC3_wpm_timer.py — Typ bepaalt Tijd: sneller typen = sneller klaar
+# - Virtuele tijd: 60s totaal (aanpasbaar met -minutes)
+# - Elke toetsaanslag voegt virtuele seconden toe (default 0.5s per key; --sec-per-key)
+# - Beeps versnellen automatisch (BPM schaalt met voortgang)
+# - +/- past max BPM aan; m mute/unmute; q/Esc stopt
+# - WPM live (op basis van echte verstreken tijd)
 # - ASCII-safe; core.rt fallback
 
 import os, sys, time, argparse
@@ -20,7 +20,6 @@ except Exception:
         if style: sys.stdout.write(RESET)
         sys.stdout.flush()
 
-# Beep: winsound (Windows) -> fallback naar '\a'
 def do_beep(freq=880, dur_ms=35):
     try:
         import winsound
@@ -31,122 +30,124 @@ def do_beep(freq=880, dur_ms=35):
         except Exception:
             pass
 
-def progress_bar(p, width=50, on_char="#", off_char="-"):
+def progress_bar(p, width=60, on_char="=", off_char="-"):
     fill = max(0, min(width, int(p * width)))
     return "[" + (on_char * fill) + (off_char * (width - fill)) + "]"
 
-def render(title, secs_left, bpm, muted, chars, wpm, beat_pulse=False):
+def render(secs_left, total_secs, chars, wpm, bpm_now, muted, pulse=False):
+    done = total_secs - max(0, secs_left)
+    p = done / float(total_secs)
+    bar = progress_bar(p, width=60, on_char=("#" if pulse else "="), off_char="-")
+    mm = max(0, int(secs_left)) // 60
+    ss = max(0, int(secs_left)) % 60
     lines = []
-    lines.append("  " + title)
+    lines.append("  Scene C3: WPM/BPM minute timer (type vult de tijd)")
     lines.append("")
-    # countdown en bar
-    total = max(1, STATE['total_secs'])
-    done = total - max(0, secs_left)
-    p = done / float(total)
-    bar = progress_bar(p, width=60, on_char=("#" if beat_pulse else "="), off_char="-")
-    mm = secs_left // 60
-    ss = secs_left % 60
     lines.append(bar)
-    lines.append("time left: {0:02d}:{1:02d}    BPM: {2}   sound: {3}".format(mm, ss, bpm, ("OFF" if muted else "ON")))
+    lines.append("virtuele tijd over: {0:02d}:{1:02d}   BPM: {2}   sound: {3}".format(mm, ss, int(bpm_now), ("OFF" if muted else "ON")))
     lines.append("")
-    lines.append("keystrokes: {0}    WPM: {1:.1f}".format(chars, wpm))
+    lines.append("keystrokes: {0}   WPM(real-time): {1:.1f}".format(chars, wpm))
     lines.append("")
-    lines.append("keys: [+]/[-] BPM  |  m mute/unmute  |  q/Esc stop  |  (elke toets telt mee)")
-    fast_render(lines, BRIGHT if beat_pulse else DIM)
-
-STATE = {'total_secs': 60}
+    lines.append("keys: [+]/[-] BPM-max  |  m mute/unmute  |  q/Esc stop  |  (elke toets telt mee)")
+    fast_render(lines, BRIGHT if pulse else DIM)
 
 def main():
     ap = argparse.ArgumentParser(add_help=False)
-    ap.add_argument('-minutes', type=int, default=1)  # standaard 1 minuut
-    ap.add_argument('-bpm', type=int, default=120)    # standaard 120 BPM
+    ap.add_argument('-minutes', type=int, default=1)        # totale virtuele minuten
+    ap.add_argument('-bpm', type=int, default=80)           # start/min BPM
+    ap.add_argument('--bpm-max', type=int, default=200)     # max BPM bij volle balk
+    ap.add_argument('--sec-per-key', type=float, default=0.5, help='virtuele seconden per toetsaanslag')
+    ap.add_argument('--mute', action='store_true')
+    # slik runner-flags door:
     ap.add_argument('-label', type=str, default='C3')
-    ap.add_argument('--mute', action='store_true', help='start muted')
     args, _ = ap.parse_known_args()
 
-    total_secs = max(10, int(args.minutes*60))   # minimaal 10s
-    STATE['total_secs'] = total_secs
-    bpm = max(40, min(240, int(args.bpm)))
+    total_secs = max(10, int(args.minutes*60))
+    bpm_min = max(30, min(240, int(args.bpm)))
+    bpm_max = max(bpm_min+10, min(400, int(args.bpm_max)))
+    sec_per_key = max(0.05, float(args.sec_per_key))
     muted = bool(args.mute)
 
     sys.stdout.write(HIDE); sys.stdout.flush()
     try:
-        # timing
-        start = time.perf_counter()
-        last_beat = start
-        beat_interval = 60.0 / bpm
+        start_real = time.perf_counter()
+        # virtuele klok
+        virt_elapsed = 0.0
+        last_beat_time = time.perf_counter()
         beat_count = 0
 
-        # tellers
         chars = 0
         wpm = 0.0
 
         # init draw
-        render("Scene C3: WPM/BPM minute timer", total_secs, bpm, muted, chars, wpm, beat_pulse=False)
+        render(total_secs-virt_elapsed, total_secs, chars, wpm, bpm_min, muted, pulse=False)
 
-        while True:
+        while virt_elapsed < total_secs:
             now = time.perf_counter()
-            elapsed = now - start
-            left = max(0, int(total_secs - elapsed))
-            if elapsed >= total_secs:
-                break
-
-            # Beat (met accent op elke 4e)
-            pulse = False
-            if (now - last_beat) >= beat_interval:
-                last_beat += beat_interval
-                beat_count += 1
-                pulse = True
-                if not muted:
-                    if (beat_count % 4) == 0:
-                        do_beep(1200, 55)  # accent
-                    else:
-                        do_beep(900, 35)
-
-            # Input
+            # input: elke toetsaanslag => virtuele tijd erbij
+            key_presses = 0
             try:
                 import msvcrt
                 while msvcrt.kbhit():
                     b = msvcrt.getch()
-                    if b in (b'\x1b', b'q', b'Q'):   # Esc / q
+                    if b in (b'\x1b', b'q', b'Q'):
                         raise KeyboardInterrupt
                     elif b in (b'+', b'='):
-                        bpm = min(240, bpm+2); beat_interval = 60.0 / bpm
+                        bpm_max = min(400, bpm_max + 5)
                     elif b in (b'-', b'_'):
-                        bpm = max(40, bpm-2); beat_interval = 60.0 / bpm
+                        bpm_max = max(bpm_min+10, bpm_max - 5)
                     elif b in (b'm', b'M'):
                         muted = not muted
-                    elif b in (b'\r', b'\n'):
-                        # Enter telt ook als "actie"
-                        chars += 1
+                        key_presses += 1  # telt als actie
                     else:
-                        # alle andere toetsaanslagen tellen als 1 char
-                        chars += 1
+                        key_presses += 1
             except Exception:
-                # geen msvcrt? dan geen live input
                 pass
 
-            # Realtime WPM (gemiddelde tot nu toe)
-            minutes = max(1e-6, elapsed/60.0)
-            wpm = (chars/5.0) / minutes
+            if key_presses > 0:
+                chars += key_presses
+                virt_elapsed += sec_per_key * key_presses
+                if virt_elapsed > total_secs:
+                    virt_elapsed = total_secs
+
+            # BPM schaalt met voortgang van de virtuele klok
+            progress = virt_elapsed / float(total_secs) if total_secs > 0 else 1.0
+            bpm_now = bpm_min + (bpm_max - bpm_min) * progress
+            beat_interval = 60.0 / bpm_now
+
+            # Beat (versnelt naarmate progress stijgt); accent op elke 4e
+            pulse = False
+            if (now - last_beat_time) >= beat_interval:
+                last_beat_time += beat_interval
+                beat_count += 1
+                pulse = True
+                if not muted:
+                    if (beat_count % 4) == 0:
+                        do_beep(1200, 55)
+                    else:
+                        do_beep(900, 35)
+
+            # WPM (op echte tijd, klassieke definitie)
+            real_elapsed_min = max(1e-6, (time.perf_counter() - start_real)/60.0)
+            wpm = (chars/5.0) / real_elapsed_min
 
             # Render
-            render("Scene C3: WPM/BPM minute timer", left, bpm, muted, chars, wpm, beat_pulse=pulse)
+            render(total_secs-virt_elapsed, total_secs, chars, wpm, bpm_now, muted, pulse)
 
             time.sleep(0.01)
 
-        # Einde: samenvatting
-        total_minutes = max(1e-6, (time.perf_counter()-start)/60.0)
-        final_wpm = (chars/5.0) / total_minutes
+        # klaar
+        final_real_min = max(1e-6, (time.perf_counter()-start_real)/60.0)
+        final_wpm = (chars/5.0)/final_real_min
         fast_render([
-            "  Scene C3: WPM/BPM minute timer — klaar",
+            "  Scene C3: klaar",
             "",
             "resultaat:",
-            "  keystrokes: {0}".format(chars),
-            "  WPM       : {0:.1f}".format(final_wpm),
-            "  BPM eind  : {0}".format(bpm),
+            "  keystrokes : {0}".format(chars),
+            "  WPM(real)  : {0:.1f}".format(final_wpm),
+            "  BPM eind   : {0}".format(int(bpm_max)),
             "",
-            "Goed gedaan. Door naar de volgende scene..."
+            "Door naar het volgende level..."
         ], BRIGHT)
         time.sleep(0.8)
 
