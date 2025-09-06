@@ -1,10 +1,16 @@
-﻿# python build artefacts
+﻿# local junk
+_trash/
+
+# logs
+data/logs/
+*.log
+!data/logs/.gitkeep
+
+# python cache & venv
 **/__pycache__/
 *.pyc
 *.pyo
-
-# local virtual env
 .venv/
 
-# pytest cache
+# pytest
 .pytest_cache/
