@@ -1,46 +1,137 @@
-﻿# The 101 Game — Alchemist build
+﻿hier is je nieuwe ‘README.md’, strak, Windows-first, toetsenbord-only, zonder ‘play.bat’. plak ’m letterlijk.
 
-**Pull → `play.bat` → Play.** One click; the game auto-creates a venv and installs `requirements.txt`.
+````markdown
+# The 101 Game — zero-friction start (Windows)
 
-> 🇳🇱 **Nederlands?** See [README.nl.md](README.nl.md)
+**Pull → Run → Play.** Geen `play.bat` meer. Puur PowerShell, venv auto-setup, en draaien.
+
+_Nederlands?_ Zie `README.nl.md`.
 
 ---
 
-## Quick start
+## TL;DR — begin hier
+
+1. Open PowerShell. _Sneltoets_: Win+R → typ `powershell` → Enter.
+2. Plak dit blok en druk Enter na elke regel:
+
 ```powershell
+winget install --id Git.Git -e --source winget
 git clone https://github.com/meneer-van-informatica/the-101-game.git
-cd the-101-game
-.\play.bat
-```
+Set-Location .\the-101-game
 
-## What it does
-- Creates `.venv` if missing and installs `requirements.txt`.
-- Runs the game entry: `game.py`, `app.py`, or `main.py`.
+# eenmalig in deze sessie, voor het activeren van venv-scripts
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
-## Vision (WIP)
-01 | Ja maat, dit is goud: ‘The 101 Game’ is your own learning universe.
-02 | Plan = 10 worlds × 10 levels + 1 final boss → total 101.
-03 | Level rhythm = [Hook 5s] [Do 40s] [Proof 15s] [Next 1s].
-04 | Level format = title (1 line) + test(s) + mini-check + Enter → next.
-05 | Author rule = each level teaches exactly 1 thing.
-06 | World map (example, adjust as you like):
-07 | W0 Bits & Logic (L0–L9) → binary count, XOR, K-map, adder.
-08 | W1 Algorithms (L10–L19) → linear/binary, sort, invariant.
-09 | W2 Data & DB (L20–L29) → ER, 1–3NF, select/project/join.
-10 | W3 Machines (L30–L39) → FSM, fetch-decode-execute, pipeline.
-11 | W4 Networks (L40–L49) → packet, DNS, HTTP, idempotent.
-12 | W5 AI-Basics (L50–L59) → split, loss, metric, bias.
-13 | W6 Robot-Choreo (L60–L69) → states, millis-timing, tempo.
-14 | W7 Sensing & Control (L70–L79) → noise, Kalman-intuition, PID.
-15 | W8 Product & Pitch (L80–L89) → BOM, margin, poster, consent.
-16 | W9 Ethics & Show (L90–L99) → safety, no-face, audience.
-17 | L100 Finale → ‘all together’ bossfight with 3 checks.
+# maak en activeer venv (Python 3.12 aanbevolen)
+py -3.12 -m venv .venv
+. .\.venv\Scripts\Activate.ps1
+
+# deps en run
+python -m pip install --upgrade pip
+pip install -r .\requirements.txt
+python .\main.py
+````
+
+> Werkt `py` niet? Vervang de venv-regel door: `python -m venv .venv`.
+
+---
+
+## Wat doet dit?
+
+* **Maakt `.venv`** als die nog niet bestaat en **installeert `requirements.txt`**.
+* **Start het spel** via `main.py`. Heb je `game.py` of `app.py`? Run dan:
+
+  * `python .\game.py` *of* `python .\app.py`.
+
+---
+
+## Waarom geen `play.bat`?
+
+* PowerShell is **veiliger en transparanter**.
+* Je ziet **precies** wat er gebeurt en kunt elke stap herstellen.
+* Eén README-blok werkt op **elke** standaard Windows-installatie.
+
+---
+
+## Visie (WIP, compact)
+
+* **Plan**: 10 werelden × 10 levels + 1 finale = **101**.
+* **Ritme per level**: Hook 5s → Do 40s → Proof 15s → Next 1s.
+* **Format**: titel (1 regel) + test(s) + mini-check → Enter voor volgende.
+* **Auteur-regel**: elk level leert **exact 1** ding.
+
+**Wereldkaart (voorbeeld)**
+W0 Bits & Logic → binary, XOR, K-map, adder
+W1 Algorithms → linear/binary, sort, invariant
+W2 Data & DB → ER, 1–3NF, select/project/join
+W3 Machines → FSM, fetch-decode-execute, pipeline
+W4 Networks → packet, DNS, HTTP, idempotent
+W5 AI-Basics → split, loss, metric, bias
+W6 Robot-Choreo → states, millis-timing, tempo
+W7 Sensing & Control → noise, Kalman-intuition, PID
+W8 Product & Pitch → BOM, margin, poster, consent
+W9 Ethics & Show → safety, no-face, audience
+L100 Finale → ‘all together’ bossfight met 3 checks
+
+---
+
+## Voor beginners — ‘Hee Domme Robot’ (Windows)
+
+Je bent hier nieuw. Mooi. Open PowerShell: **Win+R → `powershell` → Enter**.
+Kopieer dan het **TL;DR-blok** hierboven. Dat is **Stap 0**.
+Computer is snel in rekenen, jij wordt slim door **te proberen**. Klaar? **Run.**
+
+---
 
 ## Contribute
-See [CONTRIBUTING.md](CONTRIBUTING.md). New Programmer Workflow: AI-assisted, Windows PowerShell, minimal VS Code.
+
+Zie `CONTRIBUTING.md`. Nieuwe dev-flow: **AI-assisted**, **Windows PowerShell**, **minimal VS Code**.
+
+---
 
 ## Contact
-See [CONTACT.md](CONTACT.md).
+
+Zie `CONTACT.md`.
+
+---
 
 ## License
-MIT, see [LICENSE](LICENSE).
+
+MIT — zie `LICENSE`.
+
+````
+
+### plus: mini ‘scripts\w0.ps1’ (optioneel, maar handig)
+Wil je toch ‘één commando’? Maak dit script aan en roep ’m zo aan: `powershell -File .\scripts\w0.ps1`
+
+```powershell
+param([switch]$Upgrade)
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+if (-not (Test-Path '.\.venv\Scripts\Activate.ps1')) { py -3.12 -m venv .venv }
+. .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+if ($Upgrade -or -not (Test-Path '.\rich_installed.flag')) {
+  pip install -r .\requirements.txt
+  New-Item -ItemType File -Path .\rich_installed.flag -Force | Out-Null
+}
+if (Test-Path '.\main.py') { python .\main.py }
+elseif (Test-Path '.\game.py') { python .\game.py }
+elseif (Test-Path '.\app.py') { python .\app.py }
+else { Write-Host 'geen entry file gevonden (main.py/game.py/app.py)'; exit 1 }
+````
+
+### keuzemenu
+
+\[A] ik maak meteen `README.nl.md` met identieke stappen in het Nederlands
+\[B] ik voeg `scripts\w0.ps1` toe en update `README.md` met de one-liner start
+\[C] ik zet CI op Windows aan met `ruff + pytest` bij elke push
+\[D] #route4: ik voeg ‘/docs/kern10.html’ toe aan je site en link ’m vanaf home
+
+Volg Mij en het Komt Goed, lul. Namens LMW.
+
+```powershell
+git add README.md
+git commit -m 'docs: zero-friction Windows README; remove play.bat path'
+git push
+```
