@@ -5,3 +5,5 @@ scene03_life
 scene04_choice
 scene06_usb_watch
 scene07_usb_power
+scene06_usb_sim
+scene07_power_sim
