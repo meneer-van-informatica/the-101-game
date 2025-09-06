@@ -3,3 +3,4 @@
 *.yml  text eol=lf
 *.bat  text eol=crlf
 *      text=auto
+*.exe filter=lfs diff=lfs merge=lfs -text
