@@ -5,3 +5,4 @@ scene04_choice
 sceneC0_congrats
 sceneC1_wait
 sceneC2_mcq
+sceneC3_wpm_timer
