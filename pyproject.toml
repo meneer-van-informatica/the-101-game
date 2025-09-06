@@ -1,0 +1,3 @@
+[project.scripts]
+blink = 'the_101_game.cli:blink'
+bleep = 'the_101_game.cli:bleep'
