@@ -1,6 +1,10 @@
-﻿# project
-_trash/
-data/logs/
-*.log
-!data/.gitkeep
-!data/logs/.gitkeep
+﻿# python build artefacts
+**/__pycache__/
+*.pyc
+*.pyo
+
+# local virtual env
+.venv/
+
+# pytest cache
+.pytest_cache/
