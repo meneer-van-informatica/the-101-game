@@ -52,3 +52,12 @@ function blink_shell {
 
 function p { notepad 'E:\the-101-game\profile.ps1' }
 
+function f {
+  $root='E:\the-101-game'
+  $blink=Join-Path $root 'blink'
+  if(-not(Test-Path $blink)){$blink=Join-Path $root '.venv\Scripts\blink.exe'}
+  $bleep=Join-Path $root 'bleep'
+  if(-not(Test-Path $bleep)){$bleep=Join-Path $root '.venv\Scripts\bleep.exe'}
+  Start-Process 'powershell.exe' -WorkingDirectory $root -WindowStyle Minimized -ArgumentList @('-NoProfile','-NoLogo','-ExecutionPolicy','Bypass','-Command',"& '$blink'")
+  Start-Process 'powershell.exe' -WorkingDirectory $root -WindowStyle Minimized -ArgumentList @('-NoProfile','-NoLogo','-ExecutionPolicy','Bypass','-Command',"& '$bleep'")
+}
