@@ -1,16 +1,6 @@
-﻿01 | Helder: jouw paste had te veel omhullende fences (‘\`\`\`\`markdown’), daardoor brak de README.
-02 | Hieronder krijg je twee *drop-in* blokken: 1) exacte ‘README.md’ inhoud, 2) optionele ‘scripts\w0.ps1’.
-03 | Open Notepad, plak alleen de inhoud tussen de fences. Geen extra tekst, geen quadruple fences.
+﻿Hier is een **vernieuwde `README.md`** die je 1-op-1 kunt plakken. Windows-first, toetsenbord-only, geen `play.bat`, alles in simpele stappen.
 
-```powershell
-notepad .\README.md
-```
-
-Win+R → typ 'notepad E:\the-101-game\README.md' → Enter
-
-### README.md — plak dit exact
-
-````markdown
+````
 # The 101 Game — zero-friction start (Windows)
 
 **Pull → Run → Play.** Geen 'play.bat' meer. Puur PowerShell, venv auto-setup, en draaien.
@@ -55,69 +45,10 @@ python .\main.py
 
 ---
 
-## Waarom geen 'play.bat'?
+## Eén-commando start (optioneel)
 
-* PowerShell is **veiliger en transparanter**.
-* Je ziet **precies** wat er gebeurt en kunt elke stap herstellen.
-* Eén README-blok werkt op **elke** standaard Windows-installatie.
-
----
-
-## Visie (WIP, compact)
-
-* **Plan**: 10 werelden × 10 levels + 1 finale = **101**.
-* **Ritme per level**: Hook 5s → Do 40s → Proof 15s → Next 1s.
-* **Format**: titel (1 regel) + test(s) + mini-check → Enter voor de volgende.
-* **Auteur-regel**: elk level leert **exact 1** ding.
-
-**Wereldkaart (voorbeeld)**
-W0 Bits & Logic → binary, XOR, K-map, adder
-W1 Algorithms → linear/binary, sort, invariant
-W2 Data & DB → ER, 1–3NF, select/project/join
-W3 Machines → FSM, fetch-decode-execute, pipeline
-W4 Networks → packet, DNS, HTTP, idempotent
-W5 AI-Basics → split, loss, metric, bias
-W6 Robot-Choreo → states, millis-timing, tempo
-W7 Sensing & Control → noise, Kalman-intuition, PID
-W8 Product & Pitch → BOM, margin, poster, consent
-W9 Ethics & Show → safety, no-face, audience
-L100 Finale → 'all together' bossfight met 3 checks
-
----
-
-## Voor beginners — 'Hee Domme Robot' (Windows)
-
-Nieuw hier? Mooi. Open PowerShell: **Win+R → 'powershell' → Enter**.
-Kopieer dan het **TL;DR-blok** hierboven. Dat is **Stap 0**.
-De computer rekent snel; jij wordt slim door **te proberen**. Klaar? **Run.**
-
----
-
-## Contribute
-
-Zie 'CONTRIBUTING.md'. Nieuwe dev-flow: **AI-assisted**, **Windows PowerShell**, **minimal VS Code**.
-
----
-
-## Contact
-
-Zie 'CONTACT.md'.
-
----
-
-## License
-
-MIT — zie 'LICENSE'.
-
-````
-
-```powershell
-notepad .\scripts\w0.ps1
-````
-
-Win+R → typ 'notepad E:\the-101-game\scripts\w0.ps1' → Enter
-
-### scripts\w0.ps1 — plak dit exact (optioneel één-commando start)
+Wil je een snelstart? Maak 'scripts\w0.ps1' met onderstaande inhoud en start met:
+`powershell -File .\scripts\w0.ps1`
 
 ```powershell
 param([switch]$Upgrade)
@@ -141,27 +72,78 @@ else {
 }
 ```
 
-```powershell
-# snelle sanity
-git add README.md scripts\w0.ps1
-git commit -m 'docs: clean Windows README; add scripts/w0.ps1 one-command start'
-git push
-```
+---
 
-04 | Als Markdown nog raar rendert, komt dat meestal door kopiëren inclusief buitenste fences. Plak alleen de inhoud van het blok ‘README.md — plak dit exact’.
-05 | Wil je óók een Nederlandse variant? Zeg ‘\[A]’.
+## Voor beginners — 'Hee Domme Robot' (Windows)
 
-### keuzemenu
+Nieuw hier? Mooi. Open PowerShell: **Win+R → 'powershell' → Enter**.
+Kopieer dan het **TL;DR-blok** hierboven. Dat is **Stap 0**.
+De computer rekent snel; jij wordt slim door **te proberen**. Klaar? **Run.**
 
-\[A] ik maak ‘README.nl.md’ met identieke stappen in het Nederlands
-\[B] ik voeg CI toe: Windows-workflow met ‘ruff + pytest’
-\[C] ik zet ‘src/’-layout en console-entry op ‘python -m the\_101\_game’
-\[D] #route4: ik publiceer ‘/docs/kern10.html’ en link vanaf home
+---
+
+## Troubleshooting (Windows)
+
+* **'py' bestaat niet**: gebruik `python -m venv .venv` in plaats van `py -3.12 -m venv .venv`.
+* **ExecutionPolicy-fout**: zet tijdelijk alleen voor deze sessie:
+  `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force`
+* **exFAT/USB 'dubious ownership'**:
+  `git config --global --add safe.directory (git rev-parse --show-toplevel)`
+* **Virtuele omgeving vergeten te activeren**: run
+  `. .\.venv\Scripts\Activate.ps1` en probeer opnieuw.
+
+---
+
+## Visie (compact)
+
+* **Plan**: 10 werelden × 10 levels + 1 finale = **101**.
+* **Ritme per level**: Hook 5s → Do 40s → Proof 15s → Next 1s.
+* **Format**: titel (1 regel) + tests + mini-check → Enter voor de volgende.
+* **Auteur-regel**: elk level leert **exact 1** ding.
+
+**Wereldkaart (voorbeeld)**
+W0 Bits & Logic → binary, XOR, K-map, adder
+W1 Algorithms → linear/binary, sort, invariant
+W2 Data & DB → ER, 1–3NF, select/project/join
+W3 Machines → FSM, fetch-decode-execute, pipeline
+W4 Networks → packet, DNS, HTTP, idempotent
+W5 AI-Basics → split, loss, metric, bias
+W6 Robot-Choreo → states, millis-timing, tempo
+W7 Sensing & Control → noise, Kalman-intuition, PID
+W8 Product & Pitch → BOM, margin, poster, consent
+W9 Ethics & Show → safety, no-face, audience
+L100 Finale → 'all together' bossfight met 3 checks
+
+---
+
+## Contribute
+
+Zie 'CONTRIBUTING.md'. Nieuwe dev-flow: **AI-assisted**, **Windows PowerShell**, **minimal VS Code**.
+
+---
+
+## Contact
+
+Zie 'CONTACT.md'.
+
+---
+
+## License
+
+MIT — zie 'LICENSE'.
+
+````
+
+### Keuzemenu
+[A] ik lever meteen ‘README.nl.md’ met identieke stappen in het Nederlands  
+[B] ik voeg ‘scripts\w0.ps1’ toe en koppel de one-liner in de README  
+[C] ik zet CI op Windows aan met ‘ruff + pytest’ bij elke push  
+[D] #route4: ik publiceer ‘/docs/kern10.html’ en link ’m vanaf de homepage
 
 Volg Mij en het Komt Goed, lul. Namens LMW.
 
 ```powershell
-git add .
-git commit -m 'docs: fix README formatting; working PS blocks'
+git add README.md
+git commit -m 'docs: zero-friction Windows README (PowerShell-first, no play.bat)'
 git push
-```
+````
