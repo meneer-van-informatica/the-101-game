@@ -1,44 +1,50 @@
-<!doctype html>
-<html lang='nl'>
-<head>
-  <meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
-  <title>W0 – The 101 Game</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; }
-    .row { display: flex; gap: 1rem; margin: 1rem 0; }
-    button { padding: 1rem 1.5rem; border: 0; cursor: pointer; font-size: 1rem; }
-    .ok { background: #0a0; color: #fff; }
-    .off{ background: #444; color: #fff; }
-    #status { margin-top: .5rem; font-size: .9rem; opacity: .8; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>W0 – The 101 Game</h1>
-    <p>Hallo vanaf GitHub Pages in /docs.</p>
+<main>
+  <h1>W0 – The 101 Game</h1>
+  <p>Lampen schakelen vanaf je telefoon.</p>
 
-    <div class='row'>
-      <button id='on'  class='ok'>Lampen Aan</button>
-      <button id='off' class='off'>Lampen Uit</button>
-    </div>
-    <div id='status'>⏳ klaar</div>
+  <div class="row">
+    <button id="btn-on"  class="ok">💡 Lampen Aan</button>
+    <button id="btn-off" class="off">🕳️ Lampen Uit</button>
+    <button id="btn-toggle">↔️ Toggle</button>
+  </div>
+  <div id="status">⏳ klaar</div>
 
-    <nav><a href='./index.html'>Terug</a></nav>
-  </main>
+  <nav><a href="./index.html">Terug</a></nav>
+</main>
+<script>
+  // --- vul precies één van de twee varianten in ---
+  // 1) Worker (aanrader; geen key in HTML)
+  const ON  = 'https://JOUW-WORKER.workers.dev/api/lampen/aan';
+  const OFF = 'https://JOUW-WORKER.workers.dev/api/lampen/uit';
 
-  <script>
-    const KEY = 'VUL_HIER_JE_IFTTT_KEY_IN';
-    const url = (ev) => 'https://maker.ifttt.com/trigger/' + ev + '/with/key/' + KEY;
-    async function call(ev){
-      const el = document.getElementById('status');
-      el.textContent = '⏳ ' + ev + '...';
-      try{
-        const res = await fetch(url(ev), { method: 'POST' });
-        el.textContent = res.ok ? '✅ ' + ev + ' ok' : '❌ ' + ev + ' ' + res.status;
-      }catch(e){ el.textContent = '❌ netwerk'; }
-    }
-    document.getElementById('on').onclick  = () => call('lampen_aan');
-    document.getElementById('off').onclick = () => call('lampen_uit');
-  </script>
-</body>
-</html>
+  // 2) IFTTT rechtstreeks (makkelijk, KEY staat zichtbaar)
+  // const ON  = 'https://maker.ifttt.com/trigger/lampen_aan/with/key/JOUW_KEY';
+  // const OFF = 'https://maker.ifttt.com/trigger/lampen_uit/with/key/JOUW_KEY';
+
+  const S = document.getElementById('status');
+  async function call(url, what){
+    S.textContent = '⏳ ' + what + '...';
+    try{
+      const r = await fetch(url, { method:'POST', mode:'cors' });
+      if (r.ok) { S.textContent = '✅ ' + what; localStorage.lamp_last = what; }
+      else      { S.textContent = '❌ ' + what + ' (' + r.status + ')'; }
+    }catch(e){ S.textContent = '❌ netwerk'; }
+  }
+  document.getElementById('btn-on').onclick    = ()=>call(ON,'aan');
+  document.getElementById('btn-off').onclick   = ()=>call(OFF,'uit');
+  document.getElementById('btn-toggle').onclick= ()=>{
+    const last = localStorage.lamp_last || 'uit';
+    (last === 'aan') ? call(OFF,'uit') : call(ON,'aan');
+  };
+  // toon laatst bekende status
+  if (localStorage.lamp_last) S.textContent = 'ℹ️ laatst: ' + localStorage.lamp_last;
+</script>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  .row { display: flex; gap: .75rem; flex-wrap: wrap; margin: 1rem 0; }
+  button { padding: 1rem 1.25rem; border: 0; font-size: 1.05rem; cursor: pointer; border-radius: .5rem; }
+  .ok  { background:#0a0; color:#fff; }
+  .off { background:#444; color:#fff; }
+  #btn-toggle { background:#0057d9; color:#fff; }
+  #status { margin-top:.5rem; opacity:.8 }
+</style>
