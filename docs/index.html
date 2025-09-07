@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <title>the-101-game — Versie B (Bommel)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root { --bg:#0b0b10; --fg:#e8e8f0; --muted:#9aa4b2; --card:#151823; --accent:#6cf; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,Segoe UI,Roboto}
+    header{padding:22px 18px;border-bottom:1px solid #222;background:#0e1118}
+    h1{margin:0;font-size:20px}
+    .sub{color:var(--muted);font-size:13px}
+    main{max-width:1100px;margin:24px auto;padding:0 16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+    .card{background:var(--card);padding:16px;border-radius:12px;border:1px solid #202635;transition:transform .12s ease, border-color .12s}
+    .card:hover{transform:translateY(-2px);border-color:#2a3750}
+    .w{display:flex;align-items:center;justify-content:space-between}
+    .w b{font-size:18px}
+    .btn{display:inline-block;margin-top:10px;padding:8px 11px;border-radius:9px;border:1px solid #2a3750;color:var(--fg);text-decoration:none}
+    .btn:hover{border-color:var(--accent);color:var(--accent)}
+    footer{opacity:.7;text-align:center;margin:40px 0 28px}
+    .tag{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+<header>
+  <h1>the-101-game — Versie B <span class="sub">(Bommel, v1.0)</span></h1>
+  <div class="sub">Kies een week (W0..W9) · <a href="https://github.com/meneer-van-informatica/the-101-game" style="color:#9bd">GitHub</a></div>
+</header>
+<main>
+  <section class="grid" id="grid"></section>
+</main>
+<footer>© meneer-van-informatica · GitHub Pages</footer>
+<script>
+  const grid = document.getElementById('grid');
+  for (let i=0;i<10;i++){
+    const el = document.createElement('div');
+    el.className='card';
+    el.innerHTML = `
+      <div class="w"><b>W${i}</b><span class="tag">demo & materiaal</span></div>
+      <div class="tag">Klik voor de pagina van W${i}.</div>
+      <a class="btn" href="./W${i}.html">Open W${i}</a>
+    `;
+    grid.appendChild(el);
+  }
+</script>
+</body>
+</html>

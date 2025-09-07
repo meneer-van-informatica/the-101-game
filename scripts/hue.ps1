@@ -1,95 +1,58 @@
-param(
+﻿param(
   [switch]$Red,
-  [switch]$Off
+  [switch]$Green,
+  [switch]$Orange,
+  [switch]$Off,
+  [int]$Hue,
+  [int]$Bri = 254,
+  [int]$Sat = 254
 )
 
-# zachte clear
-function softclean { Clear-Host }
-
-# configpad
-$cfgDir  = Join-Path $env:USERPROFILE 'Documents\Hue'
-$cfgFile = Join-Path $cfgDir 'config.json'
-if (-not (Test-Path $cfgDir)) { New-Item -ItemType Directory -Path $cfgDir | Out-Null }
-
-# hulpfuncties
-function Get-HueConfig {
-  if (Test-Path $cfgFile) { try { Get-Content $cfgFile | ConvertFrom-Json } catch { $null } } else { $null }
+$cfgPath = Join-Path $PSScriptRoot 'hue.config.json'
+if (-not (Test-Path $cfgPath)) {
+  Write-Host "HUE: ontbrekende config $cfgPath" -ForegroundColor Yellow
+  Write-Host '{ "bridge":"192.168.1.10", "token":"YOUR-HUE-TOKEN", "group":0 }' -ForegroundColor DarkGray
+  exit 1
 }
-function Save-HueConfig($obj) { $obj | ConvertTo-Json | Set-Content -Path $cfgFile -Encoding utf8 }
+$cfg = Get-Content $cfgPath -Raw | ConvertFrom-Json
+$bridge = $cfg.bridge; $token = $cfg.token; $group = $cfg.group
+$base = "http://$bridge/api/$token/groups/$group/action"
 
-function Discover-BridgeIp {
+function Set-HueAll([hashtable]$State) {
   try {
-    $resp = Invoke-RestMethod -Uri 'https://discovery.meethue.com/' -TimeoutSec 5
-    if ($resp -and $resp.Count -gt 0) { return $resp[0].internalipaddress }
-  } catch {}
-  return $null
-}
-
-function Ensure-BridgeAndUser {
-  $cfg = Get-HueConfig
-  if (-not $cfg) { $cfg = [pscustomobject]@{ ip = $null; user = $null } }
-
-  if (-not $cfg.ip) {
-    $ip = Discover-BridgeIp
-    if (-not $ip) {
-      softclean
-      $ip = Read-Host 'Voer het IP van je Hue Bridge in (bijv. 192.168.1.10)'
-    }
-    $cfg.ip = $ip
-    Save-HueConfig $cfg
+    $json = $State | ConvertTo-Json -Compress
+    Invoke-WebRequest -Uri $base -Method Put -Body $json -ContentType 'application/json' -UseBasicParsing | Out-Null
+    $true
+  } catch {
+    Write-Host "HUE: request faalde: $($_.Exception.Message)" -ForegroundColor Yellow
+    $false
   }
+}
 
-  if (-not $cfg.user) {
-    softclean
-    Write-Host 'Druk binnen 30s op de link-knop op je Hue Bridge...' -ForegroundColor Yellow
-    $body = @{ devicetype = 'the-101-game#hue' } | ConvertTo-Json
-    $deadline = (Get-Date).AddSeconds(30)
-    while ((Get-Date) -lt $deadline -and -not $cfg.user) {
-      try {
-        $resp = Invoke-RestMethod -Method Post -Uri ('http://{0}/api' -f $cfg.ip) -Body $body
-        if ($resp -and $resp[0].success.username) {
-          $cfg.user = $resp[0].success.username
-          Save-HueConfig $cfg
-          break
-        }
-      } catch {}
-      Start-Sleep -Milliseconds 1500
-    }
-    if (-not $cfg.user) {
-      throw 'Kon geen user aanmaken. Druk op de link-knop en run dit script opnieuw.'
-    }
+if ($Off) { if (Set-HueAll @{on=$false}) { Write-Host 'HUE: alles is nu uit.' -ForegroundColor Yellow }; exit }
+
+# presets
+if ($Red)    { $Hue = 0 }
+if ($Green)  { $Hue = 25500 }
+if ($Orange) { $Hue = 6000 }   # warm oranje
+
+if ($PSBoundParameters.ContainsKey('Hue')) {
+  if (Set-HueAll @{ on=$true; bri=$Bri; sat=$Sat; hue=$Hue }) {
+    $name = if     ($Red)    {'ROOD'}
+            elseif ($Green)  {'GROEN'}
+            elseif ($Orange) {'ORANJE'}
+            else { "HUE=$Hue" }
+    Write-Host "HUE: alles staat nu op $name." -ForegroundColor Yellow
   }
-
-  return $cfg
+  exit
 }
 
-function Hue-All($cfg, $state) {
-  $uri = 'http://{0}/api/{1}/groups/0/action' -f $cfg.ip, $cfg.user
-  Invoke-RestMethod -Method Put -Uri $uri -Body ($state | ConvertTo-Json) | Out-Null
-}
-
-# main
-softclean
-$cfg = Ensure-BridgeAndUser
-
-if ($Red) {
-  $state = @{
-    on  = $true
-    bri = 254
-    sat = 254
-    hue = 0       # 0 of 65535 is rood
-  }
-  Hue-All $cfg $state
-  Write-Host 'HUE: alles staat nu op ROOD.' -ForegroundColor Red
-  exit 0
-}
-
-if ($Off) {
-  Hue-All $cfg @{ on = $false }
-  Write-Host 'HUE: alles is nu uit.' -ForegroundColor DarkGray
-  exit 0
-}
-
-Write-Host 'Gebruik:' -ForegroundColor Cyan
-Write-Host '  powershell -File .\scripts\hue.ps1 -Red    # alles rood'
-Write-Host '  powershell -File .\scripts\hue.ps1 -Off    # alles uit'
+Write-Host @"
+Gebruik:
+  powershell -File .\scripts\hue.ps1 -Red
+  powershell -File .\scripts\hue.ps1 -Green
+  powershell -File .\scripts\hue.ps1 -Orange
+  powershell -File .\scripts\hue.ps1 -Off
+  # of vrij:
+  powershell -File .\scripts\hue.ps1 -Hue 25500 -Bri 200 -Sat 254
+"@
