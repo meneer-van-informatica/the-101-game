@@ -3,50 +3,94 @@
   <p>Lampen schakelen vanaf je telefoon.</p>
 
   <div class="row">
-    <button id="btn-on"  class="ok">💡 Lampen Aan</button>
-    <button id="btn-off" class="off">🕳️ Lampen Uit</button>
-    <button id="btn-toggle">↔️ Toggle</button>
+    <button id="btn-on" class="ok">💡 Lampen Aan</button>
+    <button id="btn-home" class="home" disabled>🏠 HOME</button>
+    <button id="btn-off" class="off" disabled>🕳️ Lampen Uit</button>
+    <button id="btn-toggle" class="toggle" disabled>↔️ Toggle</button>
   </div>
   <div id="status">⏳ klaar</div>
 
   <nav><a href="./index.html">Terug</a></nav>
 </main>
-<script>
-  const ON  = 'https://the-101-game-lampen.<jouwsub>.workers.dev/api/lampen/aan';
-  const OFF = 'https://the-101-game-lampen.<jouwsub>.workers.dev/api/lampen/uit';
-  // --- vul precies één van de twee varianten in ---
-  // 1) Worker (aanrader; geen key in HTML)
-  const ON  = 'https://JOUW-WORKER.workers.dev/api/lampen/aan';
-  const OFF = 'https://JOUW-WORKER.workers.dev/api/lampen/uit';
 
-  // 2) IFTTT rechtstreeks (makkelijk, KEY staat zichtbaar)
-  // const ON  = 'https://maker.ifttt.com/trigger/lampen_aan/with/key/JOUW_KEY';
-  // const OFF = 'https://maker.ifttt.com/trigger/lampen_uit/with/key/JOUW_KEY';
+<script>
+  const ON = 'https://the-101-game-lampen.<jouwsub>.workers.dev/api/lampen/aan';
+  const OFF = 'https://the-101-game-lampen.<jouwsub>.workers.dev/api/lampen/uit';
 
   const S = document.getElementById('status');
-  async function call(url, what){
-    S.textContent = '⏳ ' + what + '...';
-    try{
-      const r = await fetch(url, { method:'POST', mode:'cors' });
-      if (r.ok) { S.textContent = '✅ ' + what; localStorage.lamp_last = what; }
-      else      { S.textContent = '❌ ' + what + ' (' + r.status + ')'; }
-    }catch(e){ S.textContent = '❌ netwerk'; }
+  const btnOn = document.getElementById('btn-on');
+  const btnHome = document.getElementById('btn-home');
+  const btnOff = document.getElementById('btn-off');
+  const btnToggle = document.getElementById('btn-toggle');
+  
+  let timer;
+  let countdown = 30;
+  
+  async function call(url, what) {
+    S.textContent = `⏳ ${what}...`;
+    try {
+      const r = await fetch(url, { method: 'POST', mode: 'cors' });
+      if (r.ok) { 
+        S.textContent = `✅ ${what} succesvol!`;
+        localStorage.lamp_last = what;
+      } else {
+        S.textContent = `❌ ${what} mislukt! (${r.status})`;
+      }
+    } catch (e) {
+      S.textContent = '❌ Netwerkfout';
+    }
   }
-  document.getElementById('btn-on').onclick    = ()=>call(ON,'aan');
-  document.getElementById('btn-off').onclick   = ()=>call(OFF,'uit');
-  document.getElementById('btn-toggle').onclick= ()=>{
-    const last = localStorage.lamp_last || 'uit';
-    (last === 'aan') ? call(OFF,'uit') : call(ON,'aan');
+
+  btnOn.onclick = () => {
+    call(ON, 'Lamp aan');
+    startTimer();
+    btnHome.disabled = false;
   };
-  // toon laatst bekende status
-  if (localStorage.lamp_last) S.textContent = 'ℹ️ laatst: ' + localStorage.lamp_last;
+  
+  btnHome.onclick = () => {
+    if (timer) clearInterval(timer);
+    btnOff.disabled = false;
+    btnToggle.disabled = false;
+    S.textContent = '✅ Verbinding gemaakt! Lampen kunnen nu bediend worden.';
+  };
+
+  btnOff.onclick = () => call(OFF, 'Lamp uit');
+  
+  btnToggle.onclick = () => {
+    const last = localStorage.lamp_last || 'uit';
+    (last === 'aan') ? call(OFF, 'Lamp uit') : call(ON, 'Lamp aan');
+  };
+
+  function startTimer() {
+    countdown = 30;
+    S.textContent = `⏳ Timer: ${countdown}s`;
+    timer = setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        clearInterval(timer);
+        btnHome.disabled = true;
+        S.textContent = '❌ Tijd is om! Probeer opnieuw.';
+      } else {
+        S.textContent = `⏳ Timer: ${countdown}s`;
+      }
+    }, 1000);
+  }
+
+  if (localStorage.lamp_last) S.textContent = `ℹ️ Laatst: ${localStorage.lamp_last}`;
 </script>
+
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; background: #1e1e1e; color: #fff; }
   .row { display: flex; gap: .75rem; flex-wrap: wrap; margin: 1rem 0; }
   button { padding: 1rem 1.25rem; border: 0; font-size: 1.05rem; cursor: pointer; border-radius: .5rem; }
-  .ok  { background:#0a0; color:#fff; }
-  .off { background:#444; color:#fff; }
-  #btn-toggle { background:#0057d9; color:#fff; }
-  #status { margin-top:.5rem; opacity:.8 }
+  .ok  { background: #0a0; color: #fff; }
+  .off { background: #444; color: #fff; }
+  .home { background: #ff6600; color: #fff; }
+  .toggle { background: #0057d9; color: #fff; }
+  #status { margin-top: .5rem; opacity: .8; }
+  
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 </style>
