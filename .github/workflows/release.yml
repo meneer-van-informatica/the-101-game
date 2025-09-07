@@ -1,0 +1,14 @@
+﻿name: release
+on:
+  push:
+    tags: [ 'v*' ]
+jobs:
+  zip:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir dist
+      - run: Compress-Archive -Path README.md,LICENSE,requirements.txt,scripts,src,assets,data,main.py,game.py,app.py -DestinationPath dist/the-101-game--win64.zip -Force
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/the-101-game-*-win64.zip
