@@ -1,32 +1,38 @@
-$domain = 'the101game.io'
-
-Write-Host '== http redirect check =='
+Write-Host '== https sanity =='
 try {
-  $r = Invoke-WebRequest -Uri ('http://'+$domain+'/') -Method Head -MaximumRedirection 0 -TimeoutSec 10 -UseBasicParsing
-} catch {
-  $r = $_.Exception.Response
-}
-if ($r) {
-  '{0} -> {1} {2}' -f $r.ResponseUri, [int]$r.StatusCode, $r.StatusDescription
-  if ($r.Headers.Location) { '  location: {0}' -f $r.Headers.Location }
+  $r = Invoke-WebRequest -UseBasicParsing -Method Head -Uri 'https://the101game.io/'
+  "-> {0} {1}`n" -f [int]$r.StatusCode, $r.StatusDescription
+} catch { "-> error: $($_.Exception.Message)`n" }
+
+Write-Host '== endpoints =='
+# app
+'https://the101game.io/app/' | %{
+  try { $r = Invoke-WebRequest -UseBasicParsing -Method Head -Uri $_
+        '{0,-32} -> {1} {2}' -f $_, [int]$r.StatusCode, $r.StatusDescription
+  } catch { '{0,-32} -> error: {1}' -f $_, $_.Exception.Message }
 }
 
-Write-Host "`n== https sanity =="
-$i = Invoke-WebRequest -Uri ('https://'+$domain+'/') -Method Head -TimeoutSec 10 -UseBasicParsing
-'{0} -> {1} {2}' -f $i.ResponseUri, [int]$i.StatusCode, $i.StatusDescription
+# healthz (verwacht 200)
+'https://the101game.io/healthz','https://the101game.io/101/healthz' | %{
+  try { $r = Invoke-WebRequest -UseBasicParsing -Method Head -Uri $_
+        '{0,-32} -> {1} {2}' -f $_, [int]$r.StatusCode, $r.StatusDescription
+  } catch { '{0,-32} -> error: {1}' -f $_, $_.Exception.Message }
+}
 
-Write-Host "`n== endpoints =="
-$urls = @(
-  'https://the101game.io/app/',
-  'https://the101game.io/101/healthz',
-  'https://the101game.io/postmark/inbound'
-)
-foreach ($u in $urls) {
+# inbound (GET=405 is OK; endpoint is POST-only)
+'https://the101game.io/postmark/inbound' | %{
   try {
-    $h = Invoke-WebRequest -Uri $u -Method Head -TimeoutSec 10 -UseBasicParsing
-    '{0,-35} -> {1} {2}' -f $u, [int]$h.StatusCode, $h.StatusDescription
+    $r = Invoke-WebRequest -UseBasicParsing -Method Head -Uri $_
+    '{0,-32} -> {1} {2}' -f $_, [int]$r.StatusCode, $r.StatusDescription
   } catch {
-    '{0,-35} -> error: {1}' -f $u, $_.Exception.Message
+    $resp = $_.Exception.Response
+    if ($resp -and $resp.StatusCode.value__ -eq 405) {
+      '{0,-32} -> 405 Method Not Allowed (OK: POST-only)' -f $_
+    } else {
+      '{0,-32} -> error: {1}' -f $_, $_.Exception.Message
+    }
   }
 }
-Write-Host "`n== klaar =="; Read-Host 'enter om te sluiten'
+
+Write-Host "`n== klaar =="
+Read-Host 'enter om te sluiten'
