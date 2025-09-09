@@ -1,0 +1,11 @@
+﻿Aisha Karim, s0laris, 7, mid, v
+Jay den Boer, night_owl, 1, gk, m
+Bo van Dijk, bo_fox, 2, def, v
+Rayan El Amrani, rayanx, 3, def, m
+Lola Vermeer, lolavm, 4, def, v
+Mats Hoekstra, mats_h, 5, mid, m
+Noor Jansen, noor_j, 6, mid, v
+Kenji Tan, kenji_t, 8, mid, m
+Zara Ouahbi, zara_oba, 9, att, v
+Timo de Leeuw, timo_dl, 10, att, m
+Sofia Marques, sof_mar, 11, att, v

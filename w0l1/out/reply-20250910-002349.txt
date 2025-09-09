@@ -1,0 +1,9 @@
+﻿Ingeleverd: nog niet ok — 1 fout(en).
+Onderwerp: (clipboard)
+Samenvatting: spelers=0  bullets=0  klassedoel=11
+
+Belangrijkste fouten:
+- te weinig regels: 0/11
+
+Tip: bouw je regels in Notepad, buddy-check en plak opnieuw.
+— mdB

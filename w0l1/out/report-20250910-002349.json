@@ -1,0 +1,18 @@
+﻿{
+    "class":  "5v",
+    "subject":  "(clipboard)",
+    "bullets":  0,
+    "kukel":  0,
+    "players":  [
+
+                ],
+    "errors":  [
+                   "te weinig regels: 0/11"
+               ],
+    "warnings":  [
+
+                 ],
+    "source":  null,
+    "raw":  "w0l1:from-clipboard\n",
+    "ts":  "2025-09-10T00:23:49.8302049+02:00"
+}
