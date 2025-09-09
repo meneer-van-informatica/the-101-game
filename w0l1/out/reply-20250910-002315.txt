@@ -1,0 +1,9 @@
+﻿Ingeleverd: nog niet ok — 1 fout(en).
+Onderwerp: challenge 0 – 5v – elftal
+Samenvatting: spelers=2  bullets=5  klassedoel=11
+
+Belangrijkste fouten:
+- te weinig regels: 2/11
+
+Tip: bouw je regels in Notepad, buddy-check en plak opnieuw.
+— mdB

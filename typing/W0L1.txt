@@ -1,0 +1,121 @@
+<# ======================================================================
+NAME
+  W0L1 Console Capture (drop-in script; no $PROFILE needed)
+
+LOC
+  File: E:\the-101-game\typing\W0L1.txt   (any path ok)
+  Default capture dir: 'E:\the-101-game\typing\captures'
+
+IN
+  Params (optional when invoking via IEX):
+    -Do   <ca|cap|capg|none>   default: 'none' (defines funcs only)
+    -Name <string>             extra tag for filenames (cap/capg)
+    -Dir  <path>               target dir for captures
+    -NoOpen (switch)           do not open Notepad
+    -NoClip (switch)           do not copy to clipboard
+    -Msg  <string>             git commit message (capg)
+
+OUT
+  ca     → copies full console screen buffer to clipboard
+  cap    → writes '<Dir>\console-YYYYMMDD-HHMMSS[-Name].txt'
+            also clipboard (unless -NoClip) and opens in Notepad (unless -NoOpen)
+  capg   → cap + 'git add -A; git commit -m <Msg>; git push'
+            warns if not a git repo
+
+USAGE (no profile; from the console)
+  iex (gc 'E:\the-101-game\typing\W0L1.txt' -Raw)                  # define funcs only
+  iex (gc 'E:\the-101-game\typing\W0L1.txt' -Raw); cap 'w0l1'      # run cap now
+  iex (gc 'E:\the-101-game\typing\W0L1.txt' -Raw); capg -Msg 'w0l1 snapshot'
+
+  # one-liner with action:
+  powershell -NoLogo -Command "& { param($p) . $p -Raw | Out-Null }" 'E:\the-101-game\typing\W0L1.txt'; cap
+====================================================================== #>
+
+param(
+  [ValidateSet('ca','cap','capg','none')][string]$Do = 'none',
+  [string]$Name,
+  [string]$Dir = 'E:\the-101-game\typing\captures',
+  [switch]$NoOpen,
+  [switch]$NoClip,
+  [string]$Msg = 'cap: console snapshot'
+)
+
+# ensure capture dir
+try { if (-not (Test-Path $Dir)) { New-Item -ItemType Directory -Path $Dir -Force | Out-Null } } catch {}
+
+# Console reader (no profile needed)
+function _Ensure-ConsoleCopyType {
+  if (-not ([System.Management.Automation.PSTypeName] 'ConsoleCopy').Type) {
+    Add-Type -TypeDefinition @'
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public static class ConsoleCopy {
+  [StructLayout(LayoutKind.Sequential)] public struct COORD { public short X; public short Y; }
+  [DllImport("kernel32.dll", SetLastError=true)] static extern IntPtr GetStdHandle(int nStdHandle);
+  [DllImport("kernel32.dll", SetLastError=true, CharSet=CharSet.Unicode)]
+  static extern bool ReadConsoleOutputCharacterW(IntPtr h, StringBuilder b, uint n, COORD c, out uint r);
+  public static string ReadAll(){
+    IntPtr h = GetStdHandle(-11);
+    int w = Console.BufferWidth; int hgt = Console.BufferHeight;
+    var all = new StringBuilder(w * hgt);
+    for (int y=0; y<hgt; y++){
+      var line = new StringBuilder(w); uint read;
+      ReadConsoleOutputCharacterW(h, line, (uint)w, new COORD{X=0,Y=(short)y}, out read);
+      int len = (int)read; while(len>0 && line[len-1]==' ') len--;
+      all.Append(line.ToString(0,len)).Append(Environment.NewLine);
+    }
+    return all.ToString();
+  }
+}
+'@
+  }
+}
+function Get-ConsoleText { _Ensure-ConsoleCopyType; [ConsoleCopy]::ReadAll() }
+
+# ca: clipboard-only
+function ca {
+  Get-ConsoleText | Set-Clipboard
+  Write-Host 'copied console to clipboard'
+}
+
+# cap: dump console to file (+clipboard, +notepad)
+function cap {
+  param([string]$NameLocal,[string]$DirLocal = $Dir,[switch]$NoOpenLocal,[switch]$NoClipLocal)
+  if (-not (Test-Path $DirLocal)) { New-Item -ItemType Directory -Path $DirLocal -Force | Out-Null }
+  $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+  $base  = 'console-{0}' -f $stamp
+  if ($NameLocal) { $base = '{0}-{1}' -f $base,$NameLocal }
+  $out = Join-Path $DirLocal ($base + '.txt')
+  $text = Get-ConsoleText
+  $text | Set-Content -Path $out -Encoding UTF8
+  if (-not $NoClipLocal) { $text | Set-Clipboard }
+  if (-not $NoOpenLocal) { Start-Process notepad $out }
+  Write-Host ('saved: ' + $out)
+  return $out
+}
+
+# capg: cap + git
+function capg {
+  param([string]$MsgLocal = $Msg,[string]$NameLocal = $Name,[string]$DirLocal = $Dir,[switch]$NoOpenLocal,[switch]$NoClipLocal)
+  $out = cap -NameLocal $NameLocal -DirLocal $DirLocal -NoOpenLocal:$NoOpenLocal -NoClipLocal:$NoClipLocal
+  try {
+    git rev-parse --is-inside-work-tree *> $null
+    git add -A
+    git commit -m $MsgLocal
+    git push
+  } catch {
+    Write-Warning 'not a git repo here; skipped add/commit/push'
+  }
+  return $out
+}
+
+# auto-action when script is invoked with -Do
+switch ($Do) {
+  'ca'   { ca; break }
+  'cap'  { cap  -NameLocal $Name -DirLocal $Dir -NoOpenLocal:$NoOpen -NoClipLocal:$NoClip; break }
+  'capg' { capg -MsgLocal $Msg -NameLocal $Name -DirLocal $Dir -NoOpenLocal:$NoOpen -NoClipLocal:$NoClip; break }
+  default { }
+}
+
+# end
