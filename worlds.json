@@ -1,0 +1,42 @@
+[
+    {
+        "Name":  "W0 Bits \u0026 Logica",
+        "Levels":  10
+    },
+    {
+        "Name":  "W1 Algoritmen",
+        "Levels":  10
+    },
+    {
+        "Name":  "W2 Data \u0026 DB",
+        "Levels":  10
+    },
+    {
+        "Name":  "W3 Machines",
+        "Levels":  10
+    },
+    {
+        "Name":  "W4 Netwerken",
+        "Levels":  10
+    },
+    {
+        "Name":  "W5 AI-Basics",
+        "Levels":  10
+    },
+    {
+        "Name":  "W6 Robot-Choreo",
+        "Levels":  10
+    },
+    {
+        "Name":  "W7 Sensor \u0026 Regel",
+        "Levels":  10
+    },
+    {
+        "Name":  "W8 Product \u0026 Pitch",
+        "Levels":  10
+    },
+    {
+        "Name":  "W9 Ethiek \u0026 Show",
+        "Levels":  10
+    }
+]
