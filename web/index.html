@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang='nl'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>W0L1 · Lonely Wolf</title>
+  <style>
+    :root{--bg:#0c0c0c;--fg:#eaeaea;--mut:#9aa0a6;--card:#151515;--accent:#8ab4f8;--ok:#34d399;--warn:#f59e0b;--err:#ef4444;--mono:ui-monospace,Consolas,'Courier New',monospace;--sans:system-ui,Segoe UI,Arial,sans-serif}
+    *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.55}
+    a{color:var(--accent);text-decoration:none}.wrap{max-width:1080px;margin:0 auto;padding:24px}
+    .top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px}
+    .badge{font-family:var(--mono);border:1px solid #333;border-radius:999px;padding:6px 12px;background:var(--card)}
+    .title{font-size:28px;font-weight:800;margin:0}.sub{color:var(--mut);margin:0}.pill{padding:2px 8px;border:1px solid #333;border-radius:999px;font-size:12px;background:#0e0e0e}
+    .btn{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid #333;background:#101010;color:var(--fg);cursor:pointer}
+    .btn.ok{border-color:#1f4737}.btn.warn{border-color:#4a3a13}.btn.err{border-color:#4a1717}
+    .row{display:grid;gap:16px}.two{grid-template-columns:2fr 1fr}.three{grid-template-columns:2fr 1fr}
+    @media(min-width:960px){.row.two{grid-template-columns:2fr 1fr}.row.three{grid-template-columns:2fr 1fr}}
+    .card{background:var(--card);border:1px solid #262626;border-radius:12px;padding:16px}
+    .card h3{margin:0 0 8px 0}.story p{margin:0 0 10px 0}
+    label{font-size:12px;color:var(--mut)}input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#0e0e0e;color:var(--fg);font-family:inherit}
+    textarea{min-height:180px;resize:vertical}.mono{font-family:var(--mono)}.mut{color:var(--mut)}.errtxt{color:var(--err)}.oktxt{color:var(--ok)}
+    table{width:100%;border-collapse:separate;border-spacing:0 8px}th,td{padding:6px 8px;text-align:left}th{color:var(--mut);font-weight:600}
+    .flex{display:flex;gap:8px;flex-wrap:wrap}.right{margin-left:auto}
+    .badgepos{display:inline-block;font-size:12px;border:1px solid #333;border-radius:6px;padding:2px 6px;background:#0e0e0e}
+    .btnbar{display:flex;gap:8px;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+<div class='wrap'>
+
+  <div class='top'>
+    <span class='badge'>W0L1</span>
+    <h1 class='title' id='siteTitle'>Lonely Wolf</h1>
+    <p class='sub' id='siteSub'>DIKW · Linksback · Bal · ElfTal · Tekentafel</p>
+    <span class='pill' id='statePill'>stand-by</span>
+    <div style='flex:1'></div>
+    <a class='btn' href='#'>home</a>
+    <a class='btn' href='#/editor'>editor</a>
+  </div>
+
+  <div id='viewHome' class='row two' hidden>
+    <div class='card story'>
+      <h3 id='storyTitle'>De Wolf met de Bal</h3>
+      <div id='storyBody'></div>
+    </div>
+
+    <div class='card'>
+      <h3>Namenlijst</h3>
+      <p class='mut'>Dubbele namen boeit niet. Alias moet uniek zijn in je elftal.</p>
+      <input id='nameFilter' placeholder='filter op naam...'>
+      <div id='nameList' class='mono' style='max-height:300px;overflow:auto;margin-top:8px'></div>
+    </div>
+
+    <div class='card' style='grid-column:1/-1'>
+      <h3>Voer je elftal in</h3>
+      <p class='mut'>Kies 11 namen, bedenk per positie een unieke alias, rugnummer 1-99 en geslacht m/v/x. Exporteer daarna voor de mail.</p>
+      <div class='btnbar' style='margin:8px 0'>
+        <button id='autoSuggest' class='btn'>alias suggesties</button>
+        <button id='saveTeam' class='btn ok'>opslaan</button>
+        <button id='clearTeam' class='btn warn'>leeg</button>
+        <button id='exportMail' class='btn'>export mail</button>
+        <span class='pill mono' id='teamHint'>0 van 11</span>
+        <span class='pill mono right' id='validHint'>checks: 0/3</span>
+      </div>
+      <div id='errBox' class='errtxt mono' style='min-height:18px'></div>
+      <table id='teamTable'>
+        <thead>
+          <tr>
+            <th>#</th><th>positie</th><th>naam</th><th>alias</th><th>rugnr</th><th>geslacht</th>
+          </tr>
+        </thead>
+        <tbody id='teamBody'></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id='viewEditor' class='row two' hidden>
+    <div class='card'>
+      <h3>Editor</h3>
+      <div class='flex'>
+        <div style='flex:1'>
+          <label for='inpTitle'>site titel</label>
+          <input id='inpTitle' placeholder='Lonely Wolf'>
+        </div>
+        <div style='flex:1'>
+          <label for='inpSub'>subtitel</label>
+          <input id='inpSub' placeholder='DIKW · Linksback · Bal · ElfTal · Tekentafel'>
+        </div>
+      </div>
+      <div style='margin-top:8px'>
+        <label for='inpStoryTitle'>verhaal titel</label>
+        <input id='inpStoryTitle' placeholder='De Wolf met de Bal'>
+      </div>
+      <div style='margin-top:8px'>
+        <label for='inpStory'>verhaaltekst (drie-regel alinea per paragraaf)</label>
+        <textarea id='inpStory' spellcheck='false'></textarea>
+      </div>
+      <div class='btnbar' style='margin-top:8px'>
+        <button class='btn ok' id='btnSave' type='button'>publiceren</button>
+        <button class='btn warn' id='btnReset' type='button'>standaard</button>
+        <button class='btn' id='btnExport' type='button'>export json</button>
+        <label class='btn'>import json<input id='fileImport' type='file' accept='.json,application/json' style='display:none'></label>
+      </div>
+    </div>
+
+    <div class='card'>
+      <h3>Posities</h3>
+      <div id='posList'></div>
+    </div>
+  </div>
+
+  <div class='card' style='margin-top:8px'>
+    <span class='mono'>build <span id='buildTs'></span> · localStorage keys: 'w0l1Site', 'w0l1Team'</span>
+  </div>
+
+  <template id='defaultStory'>
+    <p>Er liep een wolf langs het veld aan de rand van het dorp. De lucht hing laag en dacht na. Het gras deed of het het allemaal al eens had gezien.</p>
+    <p>In zijn poten droeg hij de bal zoals men een vraag draagt. Rond en zwaar genoeg om niet te vergeten. Licht genoeg om te hopen dat iemand terugkaatst.</p>
+    <p>Hij keek naar de lijnen. Rechts lagen paden die hij wel kende. Links lag een plek waar men linkshandig denkt. Daar stond Linksback in witte letters. Het bord glansde zonder geluid.</p>
+    <p>Wie alleen speelt is een elftal min tien. Zo telde hij en voelde de rek in zijn hart. De Wolf was een Lonely Wolf. Het klonk als een bijnaam die je niet zelf kiest.</p>
+    <p>Hij had de bal. Niemand riep. De echo van een pass bleef uit. Wie kaatst wie ontvangt. De regel stond ergens in de lucht geschreven maar niemand las hardop.</p>
+    <p>Verlangen gleed over de rand van zijn snuit. Ergens achter de dijk lag Het Heldere Hoofd. Een herberg waar thee het denken warm maakt. En waar men hoofdslijper koffie schenkt die je randen weer scherp zet.</p>
+    <p>Daar, zo wist hij, leerde men elftallen vormen uit losse namen. Men maakte posities die passen. Men zette iemand op Linksback en liet het veld antwoorden.</p>
+    <p>De Wolf stootte de bal een pas vooruit. Hij telde nul als begin en één als stap. Hij glimlachte omdat ook stilte soms terug kaatst.</p>
+    <p>Hij keek nog eenmaal naar het lege doel. Toen koos hij richting herberg. Niet om te schuilen maar om scherper te worden. De bal rolde mee zoals een komma meeloopt met een zin.</p>
+  </template>
+
+</div>
+
+<script>
+'use strict';
+
+const el = (id) => document.getElementById(id);
+const $ = (sel, root=document) => root.querySelector(sel);
+
+const students = [
+  'Wendy','Nova','Yannick','Evy','Thijs','Geertje','Odella','Jasper','Dana','Joy','Bart','Wende','Daniel','Kirollos','Jip','Elyse','Marco','Lucas','Curtis','Betül','Matthijs','Sander','Sam','Yasin','Siebe','Roeland','Warmer','Bryan','Karol','Kacper','Camilla','Rosa','Sven','Sam','Tristan','Jan','Laurens','Naomé','Ryan','Minke','Juliën','Chris','Milan','Eva','Jobine','Jort','Kacper','Alisha','Stef','Casper','Esmée','Lenthe','Tieme','Wissal','Sybrandt','Hailey','Julie','Stijn','Juna','Stijn','Maud','Sanne','Finn','Anouk','Lianne','Jinwon','Lars','Esther','Iris','Megan','Femke','Thijmen','Dion','Lammert','Max','Ewoud','Micha','Anouk','Nick','Pim','Ella','Floris','Nazly','Robine','Jorian','Thijmen','Sara','Sam','Iris','Tom','Patrick','Tom','Riza','Finn','Rama','Wytze','Marek','Jakub','Merle','Fahim','Lizelotte','Bram','Leloz','Rezan'
+];
+
+const defaults = {
+  siteTitle: 'Lonely Wolf',
+  siteSub: 'DIKW · Linksback · Bal · ElfTal · Tekentafel',
+  storyTitle: 'De Wolf met de Bal',
+  storyHtml: el('defaultStory').innerHTML.trim(),
+  positions: [
+    'Doelman','Rechtsback','Rechtscentraal','Linkscentraal','Linksback',
+    'Rechtsmidden','Centrale middenvelder','Linksmidden',
+    'Rechtsbuiten','Spits','Linksbuiten'
+  ]
+};
+
+const keySite = 'w0l1Site';
+const keyTeam = 'w0l1Team';
+const site = load(keySite, defaults);
+const team = load(keyTeam, { rows: [] });
+
+function load(k, fallback){ try{ const s = localStorage.getItem(k); return s? JSON.parse(s) : structuredClone(fallback); }catch(_){ return structuredClone(fallback); } }
+function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); pulse('statePill','bewaard','oktxt'); }
+
+function pulse(id, text, cls){
+  const p = el(id), old = p.textContent;
+  p.textContent = text; if(cls) p.classList.add(cls);
+  setTimeout(()=>{ p.textContent = old; if(cls) p.classList.remove(cls); }, 900);
+}
+
+function route(){ const isEd = location.hash === '#/editor'; el('viewHome').hidden = isEd; el('viewEditor').hidden = !isEd; }
+window.addEventListener('hashchange', route);
+
+function applySite(){
+  el('siteTitle').textContent = site.siteTitle;
+  el('siteSub').textContent = site.siteSub;
+  el('storyTitle').textContent = site.storyTitle;
+  el('storyBody').innerHTML = site.storyHtml;
+  fillEditor();
+}
+
+function htmlToPlain(html){ const tmp = document.createElement('div'); tmp.innerHTML = html; return [...tmp.querySelectorAll('p')].map(p=>p.textContent.trim()).join('\n\n'); }
+function plainToHtml(txt){
+  return txt.split(/\n\s*\n/).map(block=>{
+    const clean = block.trim(); if(!clean) return '';
+    const words = clean.split(/\s+/); const lines=[[],[],[]]; for(let i=0;i<words.length;i++) lines[i%3].push(words[i]);
+    return '<p>'+lines.map(a=>a.join(' ')).join(' ')+'</p>';
+  }).filter(Boolean).join('\n');
+}
+
+function fillEditor(){
+  el('inpTitle').value = site.siteTitle;
+  el('inpSub').value = site.siteSub;
+  el('inpStoryTitle').value = site.storyTitle;
+  el('inpStory').value = htmlToPlain(site.storyHtml);
+  const box = el('posList'); box.innerHTML = '';
+  site.positions.forEach((p,i)=>{
+    const r = document.createElement('div');
+    r.style.marginBottom = '6px';
+    r.innerHTML = `<label>positie ${i+1}</label><input data-idx='${i}' value='${p}'>`;
+    box.appendChild(r);
+  });
+}
+
+function renderNames(filter=''){
+  const list = el('nameList');
+  const q = filter.trim().toLowerCase();
+  const arr = students.filter(n=>n.toLowerCase().includes(q));
+  list.innerHTML = arr.map((n,i)=>`${String(i+1).padStart(2,'0')}. ${n}`).join('<br>');
+}
+
+function renderTeam(){
+  // init rows if empty
+  if(!team.rows.length){
+    team.rows = site.positions.map((pos, idx)=>({ pos, name:'', alias:'', nr:'', sex:'x' }));
+  }
+  const tb = el('teamBody'); tb.innerHTML = '';
+  team.rows.forEach((row, i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td><span class='badgepos'>${row.pos}</span></td>
+      <td>
+        <select data-i='${i}' data-k='name'>
+          <option value=''>— kies naam —</option>
+          ${students.map(n=>`<option ${row.name===n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </td>
+      <td><input data-i='${i}' data-k='alias' placeholder='unieke alias' value='${row.alias||''}'></td>
+      <td><input data-i='${i}' data-k='nr' placeholder='1-99' value='${row.nr||''}'></td>
+      <td>
+        <select data-i='${i}' data-k='sex'>
+          ${['m','v','x'].map(s=>`<option ${row.sex===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+    `;
+    tb.appendChild(tr);
+  });
+  bindTeamInputs();
+  updateHints();
+}
+
+function bindTeamInputs(){
+  el('teamBody').querySelectorAll('input,select').forEach(ctrl=>{
+    ctrl.addEventListener('input', e=>{
+      const i = +e.target.dataset.i; const k = e.target.dataset.k; team.rows[i][k] = e.target.value.trim();
+      updateHints();
+    });
+  });
+}
+
+function aliasOk(a){ return /^[a-z0-9_-]{3,16}$/.test(a); }
+
+function validateTeam(){
+  const errs = [];
+  const filled = team.rows.filter(r=>r.name && r.alias && r.nr).length;
+  const aliases = team.rows.map(r=>r.alias).filter(Boolean);
+  const set = new Set(); const dup = new Set();
+  aliases.forEach(a=>{ if(set.has(a)) dup.add(a); else set.add(a); });
+  if(dup.size) errs.push('alias niet uniek: ' + [...dup].join(', '));
+  if(aliases.some(a=>!aliasOk(a))) errs.push('alias moet 3-16, a-z 0-9 _-');
+  const nrs = team.rows.map(r=>r.nr).filter(Boolean);
+  if(nrs.some(n=>!/^(?:[1-9]|[1-9][0-9])$/.test(n))) errs.push('rugnummer 1-99');
+  const nrSet = new Set(); const nrDup = new Set();
+  nrs.forEach(n=>{ if(nrSet.has(n)) nrDup.add(n); else nrSet.add(n); });
+  if(nrDup.size) errs.push('dubbel rugnummer: ' + [...nrDup].join(', '));
+  const checks = [
+    dup.size===0,
+    aliases.every(aliasOk),
+    nrs.length===nrSet.size
+  ];
+  el('validHint').textContent = 'checks: ' + checks.filter(Boolean).length + '/3';
+  el('errBox').innerHTML = errs.map(e=>'• '+e).join('<br>');
+  el('teamHint').textContent = filled + ' van 11';
+  return errs.length===0 && filled===11;
+}
+
+function updateHints(){ validateTeam(); }
+
+function suggestAliases(){
+  const used = new Set(team.rows.map(r=>r.alias).filter(Boolean));
+  team.rows.forEach((r,i)=>{
+    if(r.alias) return;
+    const base = slug(r.name || r.pos).slice(0,10) || 'player';
+    let j = 1, cand = base;
+    while(used.has(cand)){ j++; cand = base + '_' + j; }
+    r.alias = cand; used.add(cand);
+  });
+  renderTeam();
+}
+
+function slug(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9_-]+/g,'').replace(/_+/g,'_').replace(/-+/g,'-').replace(/^_|_$/g,''); }
+
+function exportMail(){
+  if(!validateTeam()){ alert('nog niet geldig. fix errors.'); return; }
+  const mapPos = { 'Doelman':'gk','Rechtsback':'def','Rechtscentraal':'def','Linkscentraal':'def','Linksback':'def','Rechtsmidden':'mid','Centrale middenvelder':'mid','Linksmidden':'mid','Rechtsbuiten':'att','Spits':'att','Linksbuiten':'att' };
+  const lines = team.rows.map(r=>{
+    const p = mapPos[r.pos] || 'mid';
+    return `${r.name}, ${r.alias}, ${r.nr}, ${p}, ${r.sex}`;
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  const a = document.createElement('a'); const ts = new Date().toISOString().replace(/[:]/g,'-');
+  a.href = URL.createObjectURL(blob); a.download = 'challenge-0-elftal-' + ts + '.txt'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+
+function saveTeam(){ save(keyTeam, team); }
+
+function clearTeam(){
+  team.rows = site.positions.map((pos)=>({ pos, name:'', alias:'', nr:'', sex:'x' }));
+  saveTeam(); renderTeam();
+}
+
+function applyNamesUI(){
+  renderNames('');
+  el('nameFilter').addEventListener('input', e=>renderNames(e.target.value));
+}
+
+function applyEditorEvents(){
+  el('btnSave').addEventListener('click', ()=>{
+    site.siteTitle = el('inpTitle').value.trim() || defaults.siteTitle;
+    site.siteSub = el('inpSub').value.trim() || defaults.siteSub;
+    site.storyTitle = el('inpStoryTitle').value.trim() || defaults.storyTitle;
+    site.storyHtml = plainToHtml(el('inpStory').value);
+    const inputs = el('posList').querySelectorAll('input');
+    site.positions = [...inputs].map(i=>i.value.trim()).filter(Boolean).slice(0,11);
+    save(keySite, site);
+    // reset team pos-namen als posities wijzigden
+    clearTeam();
+    applySite();
+  });
+  el('btnReset').addEventListener('click', ()=>{ const keepTeam = structuredClone(team); localStorage.removeItem(keySite); Object.assign(site, structuredClone(defaults)); save(keySite, site); Object.assign(team, keepTeam); applySite(); renderTeam(); });
+  el('btnExport').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify({ site, team }, null, 2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'w0l1-export-' + new Date().toISOString().replace(/[:]/g,'-') + '.json'; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  });
+  el('fileImport').addEventListener('change', e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const fr = new FileReader();
+    fr.onload = ()=>{ try{ const j = JSON.parse(fr.result); if(j.site) Object.assign(site, j.site); if(j.team) Object.assign(team, j.team); save(keySite, site); saveTeam(); applySite(); renderTeam(); }catch(_){ alert('import mislukt'); } };
+    fr.readAsText(f);
+  });
+  document.addEventListener('keydown', (ev)=>{ if(ev.ctrlKey && ev.key.toLowerCase()==='s' && location.hash==='#/editor'){ ev.preventDefault(); el('btnSave').click(); } });
+}
+
+function wireMainButtons(){
+  el('autoSuggest').addEventListener('click', suggestAliases);
+  el('saveTeam').addEventListener('click', saveTeam);
+  el('clearTeam').addEventListener('click', clearTeam);
+  el('exportMail').addEventListener('click', exportMail);
+}
+
+// boot
+el('buildTs').textContent = new Date().toISOString().replace('T',' ').replace('Z',' UTC');
+route(); applySite(); applyNamesUI(); renderTeam(); applyEditorEvents(); wireMainButtons();
+</script>
+</body>
+</html>
