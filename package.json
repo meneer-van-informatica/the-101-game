@@ -1,0 +1,28 @@
+{
+  "name": "the-101-game",
+  "version": "1.0.0",
+  "description": "off; film; red; pause; powershell -File .\\scripts\\run.ps1",
+  "main": "worker.js",
+  "directories": {
+    "test": "tests",
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meneer-van-informatica/the-101-game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/meneer-van-informatica/the-101-game/issues"
+  },
+  "homepage": "https://github.com/meneer-van-informatica/the-101-game#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

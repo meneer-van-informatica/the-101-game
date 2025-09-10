@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-echo
-echo "[the-101-game] Quick start:"
-echo "  1) .\\.venv\\Scripts\\python.exe .\\engine.py"
-echo "     (of gewoon: .\\play.bat)"
-echo

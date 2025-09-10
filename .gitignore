@@ -1,54 +1,10 @@
-﻿# local junk
-_trash/
-
-# logs
-data/logs/
+﻿# Ignoreren van tijdelijke bestanden
 *.log
-!data/logs/.gitkeep
-
-# python cache & venv
-**/__pycache__/
-*.pyc
-*.pyo
-.venv/
-
-# pytest
-.pytest_cache/
-
-# python & env
-**/__pycache__/
-*.pyc
-*.pyo
-.venv/
-.pytest_cache/
-
-# logs & trash
-*.log
-_trash/
-data/logs/
-!data/logs/.gitkeep
-
-# build artefacts
-build/
-dist/
-*.egg-info/
-site/
-
-# local secrets / logs
-scripts/hue.config.json
-Documents/WindowsPowerShell/exports/
-*.log
-# python venv
-.venv/
-# editor junk
-*.swp
-.DS_Store
-Thumbs.db
-
-the-101-game.tmp/
-*the-101-game.tmp*/
-the-101-game.tmp/
-/.venv/
-/the-101-game/.venv/
+*.tmp
+node_modules/
+.env
 __pycache__/
-*.pyc
+dist/
+temp/
+_trash/
+*.bak
