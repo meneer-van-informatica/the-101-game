@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The 101 Game - Nederlands</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>The 101 Game</h1>
+        <p>Welcome to the Nederlands version of The 101 Game.</p>
+        <button id="languageSelect" class="btn" onclick="toggleLanguage()">Nederlands</button>
+    </header>
+    <main>
+        <section>
+            <h2>About</h2>
+            <p>Experience the thrill of The 101 Game in your preferred language.</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 The 101 Game</p>
+    </footer>
+    <script>
+        function toggleLanguage() {
+            const currentUrl = window.location.href;
+            if (currentUrl.includes('the101game.io')) {
+                window.location.href = currentUrl.replace('the101game.io', 'the101game.nl');
+            } else {
+                window.location.href = currentUrl.replace('the101game.nl', 'the101game.io');
+            }
+        }
+    </script>
+</body>
+</html>
