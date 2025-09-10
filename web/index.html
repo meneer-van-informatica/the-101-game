@@ -29,6 +29,18 @@
       document.getElementById('languageSelect').textContent = isEnglish ? 'English' : 'Nederlands';
       document.getElementById('story').textContent = isEnglish ? 'The Wolf with the Ball.' : 'De Wolf met de Bal.';
     }
+    
+  function toggleLanguage() {
+    let isEnglish = window.location.hostname.includes("the101game.io");
+    if (isEnglish) {
+        // Redirect to the Dutch version
+        window.location.href = "https://the101game.nl";
+    } else {
+        // Redirect to the English version
+        window.location.href = "https://the101game.io";
+    }
+}
   </script>
+
 </body>
 </html>
