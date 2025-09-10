@@ -5,10 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title id="siteTitle">Lonely Wolf</title>
   <style>
-    :root{--bg:#0c0c0c;--fg:#eaeaea;--mut:#9aa0a6;--card:#151515;--accent:#8ab4f8;}
-    *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:sans-serif;}
-    .top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-    .btn{padding:10px;border:1px solid #333;background:#101010;color:var(--fg);cursor:pointer;}
+    :root {
+      --bg: #0c0c0c;
+      --fg: #eaeaea;
+      --mut: #9aa0a6;
+      --card: #151515;
+      --accent: #8ab4f8;
+    }
+    * {box-sizing: border-box;}
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: sans-serif;
+    }
+    .top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .btn {
+      padding: 10px;
+      border: 1px solid #333;
+      background: #101010;
+      color: var(--fg);
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -25,22 +49,24 @@
     let isEnglish = false;
 
     function toggleLanguage() {
+      // Toggle language state
       isEnglish = !isEnglish;
+      // Update button text
       document.getElementById('languageSelect').textContent = isEnglish ? 'English' : 'Nederlands';
+      // Update story text
       document.getElementById('story').textContent = isEnglish ? 'The Wolf with the Ball.' : 'De Wolf met de Bal.';
-    }
-    
-  function toggleLanguage() {
-    let isEnglish = window.location.hostname.includes("the101game.io");
-    if (isEnglish) {
-        // Redirect to the Dutch version
-        window.location.href = "https://the101game.nl";
-    } else {
-        // Redirect to the English version
+      
+      // Optional: Change the page title based on language
+      document.getElementById('siteTitle').textContent = isEnglish ? 'Lonely Wolf' : 'Eenzame Wolf';
+      
+      // Optional: Handle dynamic redirects based on URL (in case page reload is needed)
+      if (isEnglish && !window.location.hostname.includes("the101game.io")) {
         window.location.href = "https://the101game.io";
+      } else if (!isEnglish && window.location.hostname.includes("the101game.io")) {
+        window.location.href = "https://the101game.nl";
+      }
     }
-}
   </script>
-
 </body>
 </html>
+p
